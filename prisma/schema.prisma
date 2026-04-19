@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SiteSettings {
+  id            Int      @id @default(1)
+  tagline       String
+  heroSub       String
+  /// Public URL path e.g. /uploads/hero/abc.mp4
+  heroVideoPath String?
+  updatedAt     DateTime @updatedAt
+}
+
+model Event {
+  id        String @id @default(cuid())
+  sortOrder Int    @default(0)
+  title     String
+  dateLabel String
+  room      String
+  genre     String
+  gradient  String
+}
+
+model Resident {
+  id        String @id @default(cuid())
+  sortOrder Int    @default(0)
+  name      String
+  tags      String
+  gradient  String
+}
+
+model MenuCategory {
+  id        String     @id @default(cuid())
+  sortOrder Int        @default(0)
+  label     String
+  kind      String
+  items     MenuItem[]
+}
+
+model MenuItem {
+  id         String       @id @default(cuid())
+  categoryId String
+  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  sortOrder  Int          @default(0)
+  name       String
+  price      String
+  note       String?
+}
+
+model FaqItem {
+  id        String @id @default(cuid())
+  sortOrder Int    @default(0)
+  q         String
+  a         String
+}
+
+model WeeklySlot {
+  id        String @id @default(cuid())
+  sortOrder Int    @default(0)
+  day       String
+  vibe      String
+  time      String
+}
