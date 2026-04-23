@@ -1,12 +1,46 @@
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+/**
+ * Bump this string whenever `prisma/schema.prisma` gains/changes models so
+ * `next dev` can replace the singleton after `npx prisma generate` without
+ * only relying on a full process restart (stale client → prisma.venue undefined).
+ */
+const PRISMA_SCHEMA_EPOCH = "2026-04-23-reservations";
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+const globalForPrisma = globalThis as unknown as {
+  __br_prisma__?: PrismaClient;
+  __br_prisma_epoch__?: string;
+};
+
+function resolveDatabaseUrl(): string | undefined {
+  const pub = process.env.DATABASE_PUBLIC_URL?.trim();
+  const main = process.env.DATABASE_URL?.trim();
+  if (process.env.NODE_ENV !== "production" && pub) return pub;
+  return main || pub;
+}
+
+function createClient() {
+  const databaseUrl = resolveDatabaseUrl();
+  return new PrismaClient({
+    log: ["error"],
+    ...(databaseUrl
+      ? { datasources: { db: { url: databaseUrl } } }
+      : {}),
   });
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+function getPrisma(): PrismaClient {
+  const g = globalForPrisma;
+  if (g.__br_prisma__ && g.__br_prisma_epoch__ === PRISMA_SCHEMA_EPOCH) {
+    return g.__br_prisma__;
+  }
+  if (g.__br_prisma__) {
+    void g.__br_prisma__.$disconnect();
+  }
+  const client = createClient();
+  g.__br_prisma__ = client;
+  g.__br_prisma_epoch__ = PRISMA_SCHEMA_EPOCH;
+  return client;
+}
+
+export const prisma = getPrisma();

@@ -11,7 +11,7 @@ export default function AdminHomePage() {
             Admin
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            Manage homepage content, hero video, menus, and FAQs.
+            Manage homepage content, hero video, contact details, menus, and FAQs.
           </p>
         </div>
         <form action={logoutAction}>
@@ -32,11 +32,22 @@ export default function AdminHomePage() {
         <li>
           <Link
             href="/admin/settings"
-            className="block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-br-accent/50"
+            className="block rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 transition hover:border-teal-500/40"
           >
-            <p className="font-semibold text-white">Hero video &amp; copy</p>
+            <p className="font-semibold text-white">Hero video</p>
             <p className="mt-1 text-sm text-zinc-400">
-              Upload MP4/WebM/MOV and edit taglines.
+              Vercel Blob upload for the homepage hero.
+            </p>
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/admin/contact"
+            className="block rounded-2xl border border-white/10 bg-gradient-to-br from-teal-950/25 to-transparent p-5 transition hover:border-teal-500/40"
+          >
+            <p className="font-semibold text-white">Contact &amp; booking</p>
+            <p className="mt-1 text-sm text-zinc-400">
+              Phone, WhatsApp, Instagram, maps, sticky bar message.
             </p>
           </Link>
         </li>

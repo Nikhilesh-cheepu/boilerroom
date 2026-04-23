@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -11,8 +11,18 @@ model SiteSettings {
   id            Int      @id @default(1)
   tagline       String
   heroSub       String
-  /// Public URL path e.g. /uploads/hero/abc.mp4
+  /// HTTPS URL for hero video (e.g. Vercel Blob) or legacy /uploads/... path
   heroVideoPath String?
+  /// E.164 digits (country code, no +) for tel: — editable in /admin/settings
+  contactPhoneE164       String?
+  /// WhatsApp number for wa.me (digits only); falls back to phone if empty
+  contactWhatsappE164  String?
+  contactPhoneDisplay  String?
+  contactWhatsappDisplay String?
+  contactInstagramUrl  String?
+  contactMapsUrl       String?
+  contactAddressLine   String?
+  contactBookingMessage String?
   updatedAt     DateTime @updatedAt
 }
 
@@ -65,4 +75,38 @@ model WeeklySlot {
   day       String
   vibe      String
   time      String
+}
+
+/// Single-tenant outlet for reservations API (brandId boiler-room).
+model Venue {
+  id        String @id @default(cuid())
+  brandId   String @unique
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Reservation {
+  id                  String   @id @default(cuid())
+  createdAt           DateTime @default(now())
+  fullName            String
+  contactNumber       String
+  numberOfMen         Int
+  numberOfWomen       Int      @default(0)
+  numberOfCouples     Int      @default(0)
+  date                String
+  timeSlot            String
+  session             String
+  notes               String?
+  selectedDiscounts   Json
+  brandId             String
+  brandName           String
+  hubSpotId           String?
+  eventId             String?
+  eventName           String?
+  status              String   @default("confirmed")
+  /// Fingerprint for ~30s double-submit dedupe
+  dedupeKey           String?
+
+  @@index([dedupeKey, createdAt])
+  @@index([contactNumber, date, timeSlot, createdAt])
 }

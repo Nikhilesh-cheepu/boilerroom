@@ -5,7 +5,7 @@ import {
   verifyAdminSessionToken,
 } from "@/lib/auth/session";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/admin")) {
     return NextResponse.next();

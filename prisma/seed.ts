@@ -26,6 +26,19 @@ async function main() {
     },
   });
 
+  try {
+    await prisma.venue.upsert({
+      where: { brandId: "boiler-room" },
+      create: { brandId: "boiler-room", name: "Boiler Room" },
+      update: { name: "Boiler Room" },
+    });
+  } catch (e) {
+    console.warn(
+      "Venue seed skipped (run `npm run db:push` if you use the Venue table):",
+      e instanceof Error ? e.message : e,
+    );
+  }
+
   const eventCount = await prisma.event.count();
   if (eventCount === 0) {
     await prisma.event.createMany({

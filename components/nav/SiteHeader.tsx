@@ -8,9 +8,7 @@ import { Container } from "@/components/layout/Container";
 
 const links = [
   { href: "#events", label: "Events" },
-  { href: "#djs", label: "DJs" },
   { href: "#menu", label: "Menu" },
-  { href: "#faq", label: "FAQ" },
 ];
 
 const LOGO_SRC = "/boilerroom-logo.png";
@@ -30,8 +28,8 @@ export function SiteHeader() {
       className={cn(
         "sticky top-0 z-40 border-b transition-[background,backdrop-filter,border-color] duration-300",
         scrolled
-          ? "border-br-border bg-br-bg/75 backdrop-blur-xl"
-          : "border-transparent bg-transparent",
+          ? "border-[#cad6ff29] bg-[#080b12]/84 backdrop-blur-xl"
+          : "border-transparent bg-[#080b12]/34 backdrop-blur-sm",
       )}
     >
       <Container className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
@@ -49,19 +47,19 @@ export function SiteHeader() {
               priority
             />
           </span>
-          <span className="font-display truncate text-base font-semibold uppercase tracking-[0.15em] text-br-text sm:text-lg sm:tracking-[0.2em]">
+          <span className="font-display truncate text-base font-semibold uppercase tracking-[0.15em] text-[#f3f5fd] sm:text-lg sm:tracking-[0.2em]">
             Boiler Room
           </span>
         </Link>
         <nav
-          className="flex max-w-[58vw] shrink-0 flex-wrap justify-end gap-x-2 gap-y-1 text-[11px] font-medium text-br-muted sm:max-w-none sm:gap-x-4 sm:text-xs md:gap-x-6 md:text-sm"
+          className="flex shrink-0 justify-end gap-x-4 text-[11px] font-medium text-[#9ca6c6] sm:gap-x-6 sm:text-xs md:text-sm"
           aria-label="Sections"
         >
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="touch-manipulation whitespace-nowrap py-1 transition-colors hover:text-br-text"
+              className="touch-manipulation whitespace-nowrap py-1 transition-colors hover:text-[#e6edff]"
             >
               {l.label}
             </Link>

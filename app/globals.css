@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --br-bg: #050505;
-  --br-bg-elevated: #0c0c0c;
-  --br-surface: #141414;
-  --br-surface-hover: #1f1f1f;
-  --br-border: rgba(255, 255, 255, 0.08);
-  --br-text: #f5f5f5;
-  --br-muted: #a3a3a3;
-  --br-accent: #e50914;
-  --br-accent-dim: #9f0610;
-  --br-glow: rgba(229, 9, 20, 0.35);
+  --br-bg: #0a0908;
+  --br-bg-elevated: #12100e;
+  --br-surface: #1c1814;
+  --br-surface-hover: #2a241c;
+  --br-border: rgba(201, 162, 39, 0.12);
+  --br-text: #f0e6d8;
+  --br-muted: #9a8a78;
+  --br-accent: #c9a227;
+  --br-accent-dim: #8b6914;
+  --br-glow: rgba(201, 162, 39, 0.22);
 }
 
 @theme inline {
@@ -27,6 +27,7 @@
 }
 
 html {
+  color-scheme: dark;
   scroll-behavior: smooth;
   overflow-x: hidden;
 }
@@ -45,14 +46,14 @@ body {
 }
 
 ::selection {
-  background: var(--br-accent);
+  background: rgba(201, 162, 39, 0.35);
   color: #fff;
 }
 
 /* Horizontal shelves: subtle scrollbar */
 .shelf-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: rgba(201, 162, 39, 0.25) transparent;
 }
 
 .shelf-scroll::-webkit-scrollbar {
@@ -60,7 +61,7 @@ body {
 }
 
 .shelf-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(201, 162, 39, 0.22);
   border-radius: 999px;
 }
 
@@ -68,7 +69,86 @@ body {
   background: transparent;
 }
 
-/* Safe area for sticky dock */
-.pb-dock {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+/* Vertical stacks (e.g. time slot grid) */
+.shelf-scroll-v {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 162, 39, 0.25) transparent;
+}
+
+.shelf-scroll-v::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shelf-scroll-v::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.22);
+  border-radius: 999px;
+}
+
+.shelf-scroll-v::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Hide scrollbar but keep touch/drag scroll (e.g. day strip) */
+.shelf-scroll-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.shelf-scroll-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Ambient motion (respect reduced motion below) */
+@keyframes br-orb-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(10px, -18px, 0) scale(1.08);
+  }
+}
+@keyframes br-orb-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-12px, 12px, 0) scale(1.1);
+  }
+}
+@keyframes br-frame-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(191, 208, 255, 0.12),
+      0 0 32px -14px rgba(191, 208, 255, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(191, 208, 255, 0.28),
+      0 0 52px -8px rgba(191, 208, 255, 0.4);
+  }
+}
+.br-animate-orb-a {
+  animation: br-orb-a 9s ease-in-out infinite;
+}
+.br-animate-orb-b {
+  animation: br-orb-b 11.5s ease-in-out infinite;
+}
+.br-animate-frame-glow {
+  animation: br-frame-glow 4.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .br-animate-orb-a,
+  .br-animate-orb-b,
+  .br-animate-frame-glow {
+    animation: none;
+  }
+  /* Tailwind `animate-ping` — disable without invalid arbitrary variants */
+  .br-ping-off {
+    animation: none !important;
+  }
 }

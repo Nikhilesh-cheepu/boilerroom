@@ -13,12 +13,11 @@ export async function loginAction(
   formData: FormData,
 ): Promise<{ error?: string } | void> {
   const password = String(formData.get("password") ?? "");
-  const expected = process.env.ADMIN_PASSWORD;
+  const expected = process.env.ADMIN_PASSWORD?.trim();
 
-  if (!expected || expected.length < 8) {
+  if (expected === undefined || expected === null || expected === "") {
     return {
-      error:
-        "Server misconfigured: set ADMIN_PASSWORD (min 8 chars) in .env.local",
+      error: "Server misconfigured: set ADMIN_PASSWORD in .env.local",
     };
   }
   if (password !== expected) {

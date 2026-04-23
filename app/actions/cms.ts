@@ -1,9 +1,11 @@
 "use server";
 
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { unlink } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
+import { deleteBlobUrlIfApplicable } from "@/lib/blob/hero";
 import { isAdminSession } from "@/lib/auth/admin-server";
+import { normalizeIndianPhoneDigits } from "@/lib/phone-in";
 import { prisma } from "@/lib/prisma";
 
 async function guard() {
@@ -13,12 +15,6 @@ async function guard() {
 }
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "hero");
-const ALLOWED_MIME = new Set([
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/x-m4v",
-]);
 
 export async function updateSiteCopyAction(formData: FormData): Promise<void> {
   await guard();
@@ -33,64 +29,74 @@ export async function updateSiteCopyAction(formData: FormData): Promise<void> {
   revalidatePath("/");
 }
 
-export async function uploadHeroVideoAction(formData: FormData): Promise<void> {
+function emptyToNull(v: string): string | null {
+  const t = v.trim();
+  return t === "" ? null : t;
+}
+
+function phoneFromForm(formData: FormData, key: string): string | null {
+  const raw = String(formData.get(key) ?? "").trim();
+  if (!raw) return null;
+  const n = normalizeIndianPhoneDigits(raw);
+  return n === "" ? null : n;
+}
+
+export async function updateSiteContactAction(formData: FormData): Promise<void> {
   await guard();
-  const file = formData.get("video");
-  if (!(file instanceof File) || file.size === 0) return;
-  if (file.size > 100 * 1024 * 1024) return;
-  const mime = file.type || "application/octet-stream";
-  if (!ALLOWED_MIME.has(mime)) return;
-
-  const ext =
-    mime === "video/webm"
-      ? "webm"
-      : mime === "video/quicktime" || mime === "video/x-m4v"
-        ? "mov"
-        : "mp4";
-
-  await mkdir(UPLOAD_DIR, { recursive: true });
-  const name = `hero-${Date.now()}.${ext}`;
-  const diskPath = path.join(UPLOAD_DIR, name);
-  const buf = Buffer.from(await file.arrayBuffer());
-  await writeFile(diskPath, buf);
-
-  const publicPath = `/uploads/hero/${name}`;
-
   const prev = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-  if (prev?.heroVideoPath?.startsWith("/uploads/hero/")) {
-    const oldName = prev.heroVideoPath.replace("/uploads/hero/", "");
-    try {
-      await unlink(path.join(UPLOAD_DIR, oldName));
-    } catch {
-      /* ignore */
-    }
-  }
+  const patch = {
+    contactPhoneE164: phoneFromForm(formData, "contactPhoneE164"),
+    contactWhatsappE164: phoneFromForm(formData, "contactWhatsappE164"),
+    contactPhoneDisplay: emptyToNull(
+      String(formData.get("contactPhoneDisplay") ?? ""),
+    ),
+    contactWhatsappDisplay: emptyToNull(
+      String(formData.get("contactWhatsappDisplay") ?? ""),
+    ),
+    contactInstagramUrl: emptyToNull(
+      String(formData.get("contactInstagramUrl") ?? ""),
+    ),
+    contactMapsUrl: emptyToNull(String(formData.get("contactMapsUrl") ?? "")),
+    contactAddressLine: emptyToNull(
+      String(formData.get("contactAddressLine") ?? ""),
+    ),
+    contactBookingMessage: emptyToNull(
+      String(formData.get("contactBookingMessage") ?? ""),
+    ),
+  };
 
   await prisma.siteSettings.upsert({
     where: { id: 1 },
     create: {
       id: 1,
-      tagline: prev?.tagline ?? "Sound system loud. Kitchen open late.",
+      tagline:
+        prev?.tagline ?? "Sound system loud. Kitchen open late.",
       heroSub:
         prev?.heroSub ??
         "Tonight’s lineup, residents, food & bottle list — scroll like a setlist.",
-      heroVideoPath: publicPath,
+      ...patch,
     },
-    update: { heroVideoPath: publicPath },
+    update: patch,
   });
-
   revalidatePath("/");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/contact");
 }
+
+/* Hero video upload is handled by POST /api/admin/hero-video (route handler). */
 
 export async function clearHeroVideoAction(): Promise<void> {
   await guard();
   const prev = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-  if (prev?.heroVideoPath?.startsWith("/uploads/hero/")) {
-    const oldName = prev.heroVideoPath.replace("/uploads/hero/", "");
-    try {
-      await unlink(path.join(UPLOAD_DIR, oldName));
-    } catch {
-      /* ignore */
+  if (prev?.heroVideoPath) {
+    await deleteBlobUrlIfApplicable(prev.heroVideoPath);
+    if (prev.heroVideoPath.startsWith("/uploads/hero/")) {
+      const oldName = prev.heroVideoPath.replace("/uploads/hero/", "");
+      try {
+        await unlink(path.join(UPLOAD_DIR, oldName));
+      } catch {
+        /* ignore */
+      }
     }
   }
   await prisma.siteSettings.upsert({

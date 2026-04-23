@@ -1,123 +1,44 @@
-import { Section } from "@/components/layout/Section";
+import { Suspense } from "react";
+import { FullBleedHero } from "@/components/hero/FullBleedHero";
+import { MenuCartProvider } from "@/components/menu/menu-cart-context";
+import { MenuCartSection } from "@/components/menu/MenuCartSection";
+import { SectionReveal } from "@/components/motion/SectionReveal";
 import { SiteHeader } from "@/components/nav/SiteHeader";
-import { Hero } from "@/components/sections/Hero";
-import { ContentRow } from "@/components/sections/ContentRow";
-import { ShelfScroller } from "@/components/sections/ShelfScroller";
-import { EventCard } from "@/components/sections/EventCard";
-import { DJCard } from "@/components/sections/DJCard";
-import { WeeklyRhythm } from "@/components/sections/WeeklyRhythm";
-import { MenuShelves } from "@/components/sections/MenuShelves";
-import { VenueStory } from "@/components/sections/VenueStory";
-import { FaqSection } from "@/components/sections/FaqSection";
-import { LocationTeaser } from "@/components/sections/LocationTeaser";
+import { EventsOffersContent } from "@/components/sections/events-offers/EventsOffersContent";
+import { EventsOffersSkeleton } from "@/components/sections/events-offers/EventsOffersSkeleton";
 import { StickyDock } from "@/components/sticky/StickyDock";
-import { getPublicSiteData } from "@/lib/data/public-site";
+import { getHomePageData } from "@/lib/data/home-page";
 
-export const dynamic = "force-dynamic";
+/** ISR: faster repeat loads; CMS actions still call revalidatePath("/"). */
+export const revalidate = 30;
 
 export default async function Home() {
-  const data = await getPublicSiteData();
+  const data = await getHomePageData();
 
   return (
     <>
       <SiteHeader />
-      <main className="pb-dock overflow-x-hidden">
-        <Hero
-          tagline={data.copy.tagline}
-          heroSub={data.copy.heroSub}
-          videoSrc={data.copy.heroVideoPath}
-        />
+      <MenuCartProvider>
+        <main className="overflow-x-hidden bg-[#07090e] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:pb-[calc(6rem+env(safe-area-inset-bottom))]">
+          <FullBleedHero videoSrc={data.heroVideoPath} />
+          <div className="pointer-events-none mx-auto h-12 w-full max-w-[560px] -translate-y-10 bg-gradient-to-b from-transparent via-[#07090e]/70 to-[#07090e]" />
 
-        <Section className="bg-gradient-to-b from-br-bg to-br-elevated/40">
-          <ContentRow
-            id="events"
-            title="Featured events"
-            subtitle="Tonight and the weekend — tap a card, then lock a table when you’re ready."
-          >
-            {data.events.length === 0 ? (
-              <p className="px-4 text-center text-sm text-br-muted sm:px-6">
-                Events coming soon — check back or message us on WhatsApp.
-              </p>
-            ) : (
-              <ShelfScroller ariaLabel="Featured events">
-                {data.events.map((e, i) => (
-                  <EventCard key={e.id} event={e} index={i} />
-                ))}
-              </ShelfScroller>
-            )}
-          </ContentRow>
-        </Section>
+          <SectionReveal>
+            <Suspense fallback={<EventsOffersSkeleton />}>
+              <EventsOffersContent />
+            </Suspense>
+          </SectionReveal>
+          <div className="pointer-events-none h-14 w-full bg-gradient-to-b from-transparent via-[#080b13]/80 to-[#080b13]" />
 
-        <Section>
-          <ContentRow
-            id="djs"
-            title="Residents & guests"
-            subtitle="Faces behind the booth — tags are a vibe check, not a contract."
-          >
-            {data.residents.length === 0 ? (
-              <p className="px-4 text-center text-sm text-br-muted sm:px-6">
-                Lineup updates soon.
-              </p>
-            ) : (
-              <ShelfScroller ariaLabel="DJs and residents">
-                {data.residents.map((dj, i) => (
-                  <DJCard key={dj.id} dj={dj} index={i} />
-                ))}
-              </ShelfScroller>
-            )}
-          </ContentRow>
-        </Section>
-
-        <Section>
-          <ContentRow
-            title="Weekly rhythm"
-            subtitle="Rough guide — doors swing with the night."
-          />
-          <WeeklyRhythm slots={data.weekly} />
-        </Section>
-
-        <Section id="menu" className="scroll-mt-24">
-          <ContentRow
-            title="Food"
-            subtitle="Small plates through late night — built for the floor, not the photo."
-          />
-          {data.foodMenu.length === 0 ? (
-            <p className="px-4 text-center text-sm text-br-muted">
-              Food menu updating — ask staff tonight.
-            </p>
-          ) : (
-            <MenuShelves categories={data.foodMenu} />
-          )}
-        </Section>
-
-        <Section>
-          <ContentRow
-            title="Drinks"
-            subtitle="Signatures and classics — ask for tonight’s batch."
-          />
-          {data.drinksMenu.length === 0 ? (
-            <p className="px-4 text-center text-sm text-br-muted">
-              Drinks list updating.
-            </p>
-          ) : (
-            <MenuShelves categories={data.drinksMenu} />
-          )}
-        </Section>
-
-        <Section>
-          <VenueStory />
-        </Section>
-
-        <Section id="faq" className="scroll-mt-24">
-          <FaqSection items={data.faq} />
-        </Section>
-
-        <Section className="pb-8">
-          <LocationTeaser />
-        </Section>
-      </main>
-
-      <StickyDock />
+          <SectionReveal delay={0.08}>
+            <MenuCartSection
+              menus={data.menus}
+              whatsappE164={data.contact.whatsappE164}
+            />
+          </SectionReveal>
+        </main>
+      </MenuCartProvider>
+      <StickyDock contact={data.contact} />
     </>
   );
 }

@@ -28,6 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${display.variable} ${sans.variable} h-full scroll-pt-20 antialiased`}
     >
       <body

@@ -1,0 +1,34 @@
+/* Scoped to `.book-premium` — /book only; does not change site-wide tokens */
+.book-premium {
+  --bp-bg: #080a0f;
+  --bp-surface: rgba(186, 203, 255, 0.08);
+  --bp-surface-mid: rgba(186, 203, 255, 0.13);
+  --bp-line: rgba(202, 214, 255, 0.15);
+  --bp-line-strong: rgba(202, 214, 255, 0.24);
+  --bp-text: #f3f5fd;
+  --bp-muted: #9ca6c6;
+  --bp-accent: #bfd0ff;
+  --bp-accent-bright: #f1f5ff;
+  --bp-accent-subtle: rgba(191, 208, 255, 0.18);
+  --bp-on-accent: #0a0b0f;
+  --bp-success: #8eb8a8;
+  --bp-warn-bg: rgba(212, 175, 130, 0.08);
+  --bp-warn-line: rgba(212, 175, 130, 0.22);
+  --bp-warn-text: #e5d8c8;
+}
+
+.book-premium ::selection {
+  background: rgba(200, 208, 232, 0.22);
+  color: var(--bp-on-accent);
+}
+
+.book-premium::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(156, 187, 255, 0.14) 0%, transparent 58%),
+    radial-gradient(90% 45% at 100% 20%, rgba(172, 131, 255, 0.08) 0%, transparent 60%);
+}

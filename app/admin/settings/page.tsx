@@ -1,106 +1,93 @@
 import Link from "next/link";
-import {
-  clearHeroVideoAction,
-  updateSiteCopyAction,
-  uploadHeroVideoAction,
-} from "@/app/actions/cms";
+import { clearHeroVideoAction } from "@/app/actions/cms";
+import { ContactSettingsSection } from "@/components/admin/ContactSettingsSection";
+import { HeroVideoForm } from "@/components/admin/HeroVideoForm";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { prisma } from "@/lib/prisma";
 
+function toPreviewSrc(path: string): string {
+  if (!path.startsWith("http")) return path;
+  if (path.includes("blob.vercel-storage.com")) {
+    return `/api/hero-video?src=${encodeURIComponent(path)}`;
+  }
+  return path;
+}
+
 export default async function AdminSettingsPage() {
   const s = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  const blobReady = Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <Link
             href="/admin"
-            className="text-sm text-zinc-500 hover:text-zinc-300"
+            className="text-sm text-zinc-500 transition hover:text-zinc-300"
           >
             ← Admin home
           </Link>
-          <h1 className="mt-2 font-display text-2xl font-semibold uppercase text-white">
-            Hero &amp; copy
+          <h1 className="mt-2 font-display text-2xl font-semibold uppercase tracking-wide text-white sm:text-3xl">
+            Site media &amp; contact
           </h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Hero video +{" "}
+            <Link
+              href="/admin/contact"
+              className="text-teal-400/90 underline-offset-2 hover:underline"
+            >
+              contact &amp; booking
+            </Link>
+            .
+          </p>
         </div>
       </div>
       <AdminNav />
 
-      <section className="mt-10 space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 className="text-lg font-semibold text-white">Homepage text</h2>
-        <form
-          action={updateSiteCopyAction}
-          className="flex flex-col gap-4"
-        >
-          <label className="text-sm text-zinc-300">
-            Tagline (headline)
-            <input
-              name="tagline"
-              required
-              defaultValue={s?.tagline ?? ""}
-              className="mt-1 w-full min-h-12 rounded-xl border border-white/15 bg-black/30 px-4 text-base text-white outline-none focus:ring-2 focus:ring-br-accent"
-            />
-          </label>
-          <label className="text-sm text-zinc-300">
-            Hero subcopy
-            <textarea
-              name="heroSub"
-              required
-              rows={3}
-              defaultValue={s?.heroSub ?? ""}
-              className="mt-1 w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-base text-white outline-none focus:ring-2 focus:ring-br-accent"
-            />
-          </label>
-          <button
-            type="submit"
-            className="min-h-12 rounded-xl bg-br-accent font-semibold text-white hover:opacity-95"
-          >
-            Save copy
-          </button>
-        </form>
-      </section>
+      <ContactSettingsSection s={s} className="mt-10" />
 
-      <section className="mt-8 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+      <section className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-teal-950/30 to-transparent p-6 shadow-xl shadow-black/20 sm:p-8">
         <h2 className="text-lg font-semibold text-white">Hero video</h2>
-        <p className="text-sm text-zinc-400">
-          MP4, WebM, or MOV — max 100MB. Plays muted, looping, inline on mobile.
+        <p className="mt-1 text-sm text-zinc-400">
+          Uploaded to{" "}
+          <span className="text-teal-400/90">Vercel Blob</span> — fast delivery
+          worldwide. Replaces any previous clip.
         </p>
         {s?.heroVideoPath ? (
-          <p className="break-all text-xs text-zinc-500">
-            Current: {s.heroVideoPath}
-          </p>
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#3a322a] bg-[#0f0d0b]/70 p-3">
+            <div className="h-16 w-28 shrink-0 overflow-hidden rounded-md border border-[#4a3f35] bg-[#1b1713]">
+              <video
+                src={toPreviewSrc(s.heroVideoPath)}
+                className="h-full w-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-widest text-[#8f7b61]">
+                Current hero
+              </p>
+              <p className="truncate text-sm text-[#d9cbb8]">Saved and active</p>
+            </div>
+          </div>
         ) : (
-          <p className="text-sm text-zinc-500">No video — gradient fallback.</p>
+          <p className="mt-4 text-sm text-zinc-500">
+            No video — visitors see the gradient hero only.
+          </p>
         )}
-        <form
-          action={uploadHeroVideoAction}
-          encType="multipart/form-data"
-          className="flex flex-col gap-3 sm:flex-row sm:items-end"
-        >
-          <label className="flex-1 text-sm text-zinc-300">
-            File
-            <input
-              name="video"
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
-              className="mt-1 w-full text-sm text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:text-white"
-            />
-          </label>
-          <button
-            type="submit"
-            className="min-h-12 shrink-0 rounded-xl border border-white/15 bg-white/10 px-6 font-semibold text-white hover:bg-white/15"
-          >
-            Upload
-          </button>
-        </form>
+
+        <div className="mt-6">
+          <HeroVideoForm blobReady={blobReady} />
+        </div>
+
         {s?.heroVideoPath ? (
-          <form action={clearHeroVideoAction}>
+          <form action={clearHeroVideoAction} className="mt-6 border-t border-white/10 pt-6">
             <button
               type="submit"
-              className="text-sm text-red-400 underline-offset-4 hover:underline"
+              className="text-sm text-red-400/90 underline-offset-4 transition hover:text-red-300 hover:underline"
             >
-              Remove video
+              Remove video from site
             </button>
           </form>
         ) : null}
