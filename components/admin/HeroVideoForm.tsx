@@ -1,5 +1,6 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -10,38 +11,6 @@ const ALLOWED_MIME = new Set([
   "video/quicktime",
   "video/x-m4v",
 ]);
-
-function uploadWithProgress(
-  url: string,
-  formData: FormData,
-  onProgress: (pct: number) => void,
-): Promise<{ ok?: boolean; error?: string }> {
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    };
-    xhr.onerror = () => resolve({ error: "Network error during upload." });
-    xhr.onload = () => {
-      let parsed: unknown = null;
-      try {
-        parsed = JSON.parse(xhr.responseText) as unknown;
-      } catch {
-        /* ignore */
-      }
-      const obj = (parsed ?? {}) as { ok?: boolean; error?: string };
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve({ ok: Boolean(obj.ok) });
-      } else {
-        resolve({ error: obj.error ?? `Upload failed (${xhr.status}).` });
-      }
-    };
-    xhr.send(formData);
-  });
-}
 
 export function HeroVideoForm({ blobReady }: { blobReady: boolean }) {
   const router = useRouter();
@@ -82,25 +51,26 @@ export function HeroVideoForm({ blobReady }: { blobReady: boolean }) {
 
     setUploading(true);
     setProgress(0);
-    const fd = new FormData();
-    fd.append("video", file);
-    const res = await uploadWithProgress("/api/admin/hero-video", fd, (p) =>
-      setProgress(p),
-    );
-    setUploading(false);
-
-    if (res.error) {
-      setError(res.error);
+    try {
+      await upload(`boiler-room/hero/${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/hero-video",
+        onUploadProgress: (e) => {
+          setProgress(Math.round(e.percentage));
+        },
+      });
+    } catch (e) {
+      setUploading(false);
+      setError(e instanceof Error ? e.message : "Upload failed.");
       setProgress(null);
       return;
     }
-    if (res.ok) {
-      setOk(true);
-      setFile(null);
-      setProgress(null);
-      if (inputRef.current) inputRef.current.value = "";
-      router.refresh();
-    }
+    setUploading(false);
+    setOk(true);
+    setFile(null);
+    setProgress(null);
+    if (inputRef.current) inputRef.current.value = "";
+    router.refresh();
   }
 
   return (
