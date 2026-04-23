@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "Boiler Room — Club · Kitchen · Sound",
   description:
     "Events, residents, food & drinks. Book a table on WhatsApp. Late-night energy, every week.",
+  icons: {
+    icon: "/boilerroom-logo.png",
+    shortcut: "/boilerroom-logo.png",
+    apple: "/boilerroom-logo.png",
+  },
 };
 
 export default function RootLayout({

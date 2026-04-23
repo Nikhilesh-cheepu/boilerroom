@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import type { MenuCategory } from "@/lib/content/site";
+import {
+  drinksMenu,
+  foodMenu,
+  type MenuCategory,
+} from "@/lib/content/site";
 import {
   resolveSiteContact,
   type ResolvedSiteContact,
@@ -15,6 +19,12 @@ export type HomePageData = {
   heroVideoPath: string | null;
   menus: HomeMenus;
   contact: ResolvedSiteContact;
+};
+
+const FALLBACK_MENUS: HomeMenus = {
+  food: foodMenu,
+  beverage: drinksMenu,
+  happyhours: [],
 };
 
 function resolveHeroVideoSrc(path: string | null): string | null {
@@ -45,25 +55,36 @@ function mapCategory(c: {
 }
 
 export async function getHomePageData(): Promise<HomePageData> {
-  const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-  const categories = await prisma.menuCategory.findMany({
-    orderBy: { sortOrder: "asc" },
-    include: { items: { orderBy: { sortOrder: "asc" } } },
-  });
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+    const categories = await prisma.menuCategory.findMany({
+      orderBy: { sortOrder: "asc" },
+      include: { items: { orderBy: { sortOrder: "asc" } } },
+    });
 
-  const food = categories
-    .filter((c) => c.kind === "food")
-    .map(mapCategory);
-  const beverage = categories
-    .filter((c) => c.kind === "beverage" || c.kind === "drink")
-    .map(mapCategory);
-  const happyhours = categories
-    .filter((c) => c.kind === "happyhours")
-    .map(mapCategory);
+    const food = categories
+      .filter((c) => c.kind === "food")
+      .map(mapCategory);
+    const beverage = categories
+      .filter((c) => c.kind === "beverage" || c.kind === "drink")
+      .map(mapCategory);
+    const happyhours = categories
+      .filter((c) => c.kind === "happyhours")
+      .map(mapCategory);
 
-  return {
-    heroVideoPath: resolveHeroVideoSrc(settings?.heroVideoPath ?? null),
-    menus: { food, beverage, happyhours },
-    contact: resolveSiteContact(settings ?? undefined),
-  };
+    return {
+      heroVideoPath: resolveHeroVideoSrc(settings?.heroVideoPath ?? null),
+      menus: { food, beverage, happyhours },
+      contact: resolveSiteContact(settings ?? undefined),
+    };
+  } catch (e) {
+    // Vercel build (or fresh environments) may not have DATABASE_URL at prerender time.
+    // Keep the homepage renderable with static fallback content.
+    console.warn("[home-page] Falling back to static content:", e);
+    return {
+      heroVideoPath: null,
+      menus: FALLBACK_MENUS,
+      contact: resolveSiteContact(undefined),
+    };
+  }
 }
