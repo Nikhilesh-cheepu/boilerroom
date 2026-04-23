@@ -43,24 +43,9 @@ export async function POST(request: Request): Promise<NextResponse> {
         };
       },
       onUploadCompleted: async ({ blob }) => {
-        const prev = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-        if (prev?.heroVideoPath && prev.heroVideoPath !== blob.url) {
-          await deleteBlobUrlIfApplicable(prev.heroVideoPath);
-        }
-        await prisma.siteSettings.upsert({
-          where: { id: 1 },
-          create: {
-            id: 1,
-            tagline: prev?.tagline ?? "Sound system loud. Kitchen open late.",
-            heroSub:
-              prev?.heroSub ??
-              "Tonight’s lineup, residents, food & bottle list — scroll like a setlist.",
-            heroVideoPath: blob.url,
-          },
-          update: { heroVideoPath: blob.url },
-        });
-        revalidatePath("/");
-        revalidatePath("/admin/settings");
+        // Keep callback side-effect free to avoid client retries getting stuck at 99%.
+        // We persist `blob.url` in PATCH /api/admin/hero-video from the browser after upload succeeds.
+        void blob;
       },
     });
     return NextResponse.json(json);
@@ -68,4 +53,41 @@ export async function POST(request: Request): Promise<NextResponse> {
     const msg = e instanceof Error ? e.message : "Upload failed";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
+}
+
+export async function PATCH(request: Request): Promise<NextResponse> {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  }
+  let url = "";
+  try {
+    const body = (await request.json()) as { url?: string };
+    url = String(body.url ?? "").trim();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+  if (!url || !url.startsWith("http")) {
+    return NextResponse.json({ error: "Invalid uploaded URL." }, { status: 400 });
+  }
+
+  const prev = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  if (prev?.heroVideoPath && prev.heroVideoPath !== url) {
+    await deleteBlobUrlIfApplicable(prev.heroVideoPath);
+  }
+  await prisma.siteSettings.upsert({
+    where: { id: 1 },
+    create: {
+      id: 1,
+      tagline: prev?.tagline ?? "Sound system loud. Kitchen open late.",
+      heroSub:
+        prev?.heroSub ??
+        "Tonight’s lineup, residents, food & bottle list — scroll like a setlist.",
+      heroVideoPath: url,
+    },
+    update: { heroVideoPath: url },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return NextResponse.json({ ok: true, url });
 }

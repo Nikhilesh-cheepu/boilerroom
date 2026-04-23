@@ -51,20 +51,44 @@ export function HeroVideoForm({ blobReady }: { blobReady: boolean }) {
 
     setUploading(true);
     setProgress(0);
+    let uploadedUrl = "";
     try {
-      await upload(`boiler-room/hero/${file.name}`, file, {
+      const uploaded = await upload(`boiler-room/hero/${file.name}`, file, {
         access: "public",
         handleUploadUrl: "/api/admin/hero-video",
         onUploadProgress: (e) => {
           setProgress(Math.round(e.percentage));
         },
       });
+      uploadedUrl = uploaded.url;
     } catch (e) {
       setUploading(false);
       setError(e instanceof Error ? e.message : "Upload failed.");
       setProgress(null);
       return;
     }
+
+    try {
+      const res = await fetch("/api/admin/hero-video", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: uploadedUrl }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(data.error ?? `Save failed (${res.status}).`);
+      }
+    } catch (e) {
+      setUploading(false);
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Upload succeeded but saving hero video failed.",
+      );
+      setProgress(null);
+      return;
+    }
+
     setUploading(false);
     setOk(true);
     setFile(null);
