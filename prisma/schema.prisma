@@ -110,3 +110,10 @@ model Reservation {
   @@index([dedupeKey, createdAt])
   @@index([contactNumber, date, timeSlot, createdAt])
 }
+
+model GalleryImage {
+  id        String @id @default(cuid())
+  url       String
+  alt       String?
+  sortOrder Int    @default(0)
+}

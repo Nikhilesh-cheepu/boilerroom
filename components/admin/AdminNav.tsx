@@ -5,6 +5,7 @@ const links = [
   { href: "/admin/settings", label: "Hero video" },
   { href: "/admin/contact", label: "Contact" },
   { href: "/admin/events", label: "Events" },
+  { href: "/admin/gallery", label: "Gallery" },
   { href: "/admin/djs", label: "DJs" },
   { href: "/admin/menu", label: "Menu" },
   { href: "/admin/faq", label: "FAQ" },

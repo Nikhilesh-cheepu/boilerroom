@@ -18,6 +18,12 @@ function formatEventDate(iso: string | null): string | null {
   return dateFmt.format(d);
 }
 
+function getDjLine(offer: VenueOffer): string | null {
+  const raw = (offer.description ?? offer.entryLabel ?? "").trim();
+  if (!raw) return null;
+  return raw.replace(/\s+/g, " ").slice(0, 42);
+}
+
 function OfferCard({
   offer,
   index,
@@ -28,6 +34,7 @@ function OfferCard({
   reduceMotion: boolean;
 }) {
   const dateLine = formatEventDate(offer.eventDate);
+  const djLine = getDjLine(offer);
   const hasImage = Boolean(offer.imageUrl?.trim());
 
   return (
@@ -40,7 +47,7 @@ function OfferCard({
         duration: 0.45,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="w-[72vw] max-w-[240px] shrink-0 snap-center sm:w-[200px] sm:max-w-[220px]"
+      className="w-[68vw] max-w-[220px] shrink-0 snap-start sm:w-[190px] sm:max-w-[212px]"
     >
       <motion.div
         whileHover={
@@ -53,7 +60,7 @@ function OfferCard({
               }
         }
         whileTap={reduceMotion ? undefined : { scale: 0.97, rotate: 0 }}
-        className="group relative aspect-[9/16] overflow-hidden rounded-2xl border border-[#cad6ff2e] bg-[#0e121c] shadow-[0_20px_50px_-24px_rgba(0,0,0,0.65)]"
+        className="group relative aspect-[9/16] overflow-hidden rounded-2xl border border-[#cad6ff2b] bg-[#0e121c] shadow-[0_18px_36px_-22px_rgba(0,0,0,0.75)]"
       >
         {hasImage ? (
           <Image
@@ -61,7 +68,7 @@ function OfferCard({
             alt={offer.title ? offer.title : "Event poster"}
             fill
             sizes="(max-width: 640px) 72vw, 220px"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             loading="lazy"
             unoptimized
           />
@@ -72,27 +79,22 @@ function OfferCard({
             </span>
           </div>
         )}
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#07090e]/95 via-[#0a0e18]/5 to-transparent"
-          aria-hidden
-        />
-        <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#06080f]/96 via-[#06080f]/48 to-transparent" aria-hidden />
+        <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
           {dateLine ? (
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#b8c7ff] sm:text-[11px]">
+            <p className="mb-1 text-[10px] font-medium tracking-[0.16em] text-[#b8c7ff]/90 sm:text-[11px]">
               {dateLine}
             </p>
           ) : null}
           {offer.title ? (
-            <h3
-              className={cn(
-                "line-clamp-2 font-display text-base font-bold leading-tight text-[#f3f5fd] sm:text-lg",
-              )}
-            >
+            <h3 className={cn("line-clamp-2 font-display text-[1.02rem] font-semibold leading-tight text-[#f3f5fd] sm:text-[1.08rem]")}>
               {offer.title}
             </h3>
           ) : null}
-          {offer.entryLabel ? (
-            <p className="mt-1 line-clamp-2 text-xs text-[#9ca6c6]">{offer.entryLabel}</p>
+          {djLine ? (
+            <p className="mt-1.5 line-clamp-1 text-[12px] text-[#9ca6c6]">
+              DJ: {djLine}
+            </p>
           ) : null}
         </div>
       </motion.div>
@@ -108,8 +110,8 @@ export function EventsOffersCarousel({ offers }: { offers: VenueOffer[] }) {
       role="region"
       aria-label="Events and offers"
       className={cn(
-        "shelf-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pt-1",
-        "[-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-5",
+        "shelf-scroll flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 pt-0.5",
+        "[-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-3.5",
         "[&::-webkit-scrollbar]:h-1.5",
       )}
     >

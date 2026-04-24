@@ -284,3 +284,80 @@ export async function deleteMenuCategoryAction(formData: FormData): Promise<void
   revalidatePath("/");
   revalidatePath("/admin/menu");
 }
+
+export async function addGalleryImageFromUpload(
+  url: string,
+  alt?: string,
+): Promise<void> {
+  await guard();
+  const safeUrl = url.trim();
+  if (!safeUrl) return;
+  const last = await prisma.galleryImage.findFirst({
+    orderBy: { sortOrder: "desc" },
+  });
+  await prisma.galleryImage.create({
+    data: {
+      url: safeUrl,
+      alt: alt?.trim() || null,
+      sortOrder: (last?.sortOrder ?? 0) + 1,
+    },
+  });
+  revalidatePath("/");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/gallery");
+}
+
+export async function deleteGalleryImage(formData: FormData): Promise<void> {
+  await guard();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  await prisma.galleryImage.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/gallery");
+}
+
+export async function deleteGalleryImages(formData: FormData): Promise<void> {
+  await guard();
+  const ids = formData
+    .getAll("ids")
+    .map((v) => String(v).trim())
+    .filter(Boolean);
+  if (ids.length === 0) return;
+  await prisma.galleryImage.deleteMany({ where: { id: { in: ids } } });
+  revalidatePath("/");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/gallery");
+}
+
+export async function moveGalleryImage(formData: FormData): Promise<void> {
+  await guard();
+  const id = String(formData.get("id") ?? "").trim();
+  const direction = String(formData.get("direction") ?? "").trim();
+  if (!id || (direction !== "up" && direction !== "down")) return;
+
+  const list = await prisma.galleryImage.findMany({
+    orderBy: { sortOrder: "asc" },
+  });
+  const currentIndex = list.findIndex((item) => item.id === id);
+  if (currentIndex < 0) return;
+  const swapIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (swapIndex < 0 || swapIndex >= list.length) return;
+
+  const current = list[currentIndex];
+  const target = list[swapIndex];
+  await prisma.$transaction([
+    prisma.galleryImage.update({
+      where: { id: current.id },
+      data: { sortOrder: target.sortOrder },
+    }),
+    prisma.galleryImage.update({
+      where: { id: target.id },
+      data: { sortOrder: current.sortOrder },
+    }),
+  ]);
+
+  revalidatePath("/");
+  revalidatePath("/gallery");
+  revalidatePath("/admin/gallery");
+}

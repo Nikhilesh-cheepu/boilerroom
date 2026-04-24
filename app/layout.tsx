@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Oswald } from "next/font/google";
 import "./globals.css";
 
@@ -23,6 +23,18 @@ export const metadata: Metadata = {
     shortcut: "/boilerroom-logo.png",
     apple: "/boilerroom-logo.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Boiler Room",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#07090e",
 };
 
 export default function RootLayout({

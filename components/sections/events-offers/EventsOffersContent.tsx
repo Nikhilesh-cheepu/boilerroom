@@ -7,18 +7,14 @@ export async function EventsOffersContent() {
   return (
     <section
       id="events"
-      className="scroll-mt-6 py-14 sm:scroll-mt-8 sm:py-20"
-      style={{
-        background:
-          "linear-gradient(180deg, #07090e 0%, #0a0e18 42%, #080b13 100%)",
-      }}
+      className="scroll-mt-6 bg-[#070b12] py-10 sm:scroll-mt-8 sm:py-12"
     >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <header className="mb-8 sm:mb-10">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.4em] text-[#96a2c8] sm:text-xs">
+      <div className="mx-auto max-w-6xl px-4 sm:px-5">
+        <header className="mb-6 sm:mb-7">
+          <p className="mb-1.5 text-[10px] font-medium tracking-[0.24em] text-[#aab7da]/65 sm:text-[11px]">
             Events & offers
           </p>
-          <h2 className="font-display text-3xl font-bold uppercase leading-[1.05] tracking-tight text-[#f3f5fd] sm:text-5xl md:text-6xl">
+          <h2 className="font-display text-[2rem] font-semibold leading-[1.05] tracking-tight text-[#f5f7ff] sm:text-[2.2rem]">
             What&apos;s on
           </h2>
         </header>

@@ -73,25 +73,25 @@ export function MenuCartSection({
   return (
     <section
       id="menu"
-      className="relative scroll-mt-20 bg-gradient-to-b from-[#090d16] via-[#080b12] to-[#07090e] py-14 sm:py-20"
+      className="relative scroll-mt-20 bg-[#070b12] py-10 sm:py-12"
     >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 sm:px-5">
         <motion.header
-          className="mb-8 text-center sm:mb-10"
+          className="mb-7 text-left sm:mb-8"
           initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-12%" }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.45em] text-[#9ca6c6] sm:text-[11px]">
+          <p className="mb-1 text-[10px] font-medium tracking-[0.22em] text-[#9ca6c6]/60 sm:text-[11px]">
             Order
           </p>
-          <h2 className="font-display text-3xl font-bold uppercase tracking-tight text-[#f3f5fd] sm:text-4xl md:text-5xl">
+          <h2 className="font-display text-[2rem] font-semibold tracking-tight text-[#f3f5fd] sm:text-[2.2rem] md:text-[2.45rem]">
             Menu
           </h2>
         </motion.header>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
           {KINDS.map((k, i) => (
             <motion.button
               key={k.id}
@@ -109,21 +109,23 @@ export function MenuCartSection({
               whileHover={reduceMotion ? undefined : { y: -4, scale: 1.02 }}
               whileTap={reduceMotion ? undefined : { scale: 0.97 }}
               className={cn(
-                "group relative overflow-hidden rounded-xl border px-2 py-3 text-center sm:px-3 sm:py-3.5",
-                "border-[#cad6ff2a] bg-gradient-to-br from-[#1a2133] via-[#101522] to-[#0b1019]",
-                "shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.45)]",
-                "hover:border-[#dde7ff66] hover:shadow-[0_16px_48px_rgba(0,0,0,0.55)]",
-                activeKind === k.id && panelOpen && "ring-1 ring-[#cad6ff55]",
+                "group relative overflow-hidden rounded-xl border px-2 py-2 text-center sm:px-2.5 sm:py-2.5",
+                "border-[#cad6ff2e] bg-[#0c1320]",
+                "shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_18px_-14px_rgba(0,0,0,0.6)]",
+                "hover:border-[#dde7ff50] hover:bg-[#0f1828]",
+                activeKind === k.id &&
+                  panelOpen &&
+                  "border-[#c8d7ff80] bg-[#bacbff1f] shadow-[0_0_0_1px_rgba(191,208,255,0.28)]",
               )}
             >
               <span
-                className="pointer-events-none absolute inset-0 opacity-30"
+                className="pointer-events-none absolute inset-0 opacity-20"
                 style={{
-                    background:
+                  background:
                     "linear-gradient(135deg, rgba(191,208,255,0.17) 0%, transparent 55%)",
                 }}
               />
-              <span className="relative font-display text-sm font-semibold uppercase tracking-[0.1em] text-[#f3f5fd] sm:text-base">
+              <span className="relative font-display text-[0.94rem] font-semibold tracking-[0.03em] text-[#f3f5fd] sm:text-[0.98rem]">
                 {k.label}
               </span>
             </motion.button>
@@ -303,11 +305,7 @@ export function MenuCartSection({
           ) : null}
         </AnimatePresence>
 
-        {!panelOpen ? (
-          <p className="mt-6 text-center text-sm text-[#7a6b5c] sm:px-6">
-            Choose Food, Beverage, or Happy hours above to open the menu.
-          </p>
-        ) : null}
+        {!panelOpen ? null : null}
       </div>
     </section>
   );

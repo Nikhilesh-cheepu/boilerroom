@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Container } from "@/components/layout/Container";
 
 const links = [
@@ -14,57 +14,74 @@ const links = [
 const LOGO_SRC = "/boilerroom-logo.png";
 
 export function SiteHeader() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-40 border-b transition-[background,backdrop-filter,border-color] duration-300",
-        scrolled
-          ? "border-[#cad6ff29] bg-[#080b12]/84 backdrop-blur-xl"
-          : "border-transparent bg-[#080b12]/34 backdrop-blur-sm",
-      )}
-    >
-      <Container className="flex h-14 items-center justify-between gap-2 sm:h-16 sm:gap-4">
+    <header className="fixed inset-x-0 top-4 z-40">
+      <Container className="relative">
+        <div className="relative mx-auto h-[3.4rem] w-full max-w-[35rem] rounded-2xl border border-white/15 bg-[linear-gradient(120deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06)_35%,rgba(255,255,255,0.02))] shadow-[0_10px_35px_-22px_rgba(0,0,0,0.85)] backdrop-blur-[14px]">
+          <div className="flex h-full items-center justify-between px-3">
         <Link
           href="#top"
-          className="flex min-w-0 shrink items-center gap-2 touch-manipulation sm:gap-3"
+          className="z-10 inline-flex items-center touch-manipulation"
         >
-          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md sm:h-11 sm:w-11">
-            <Image
-              src={LOGO_SRC}
-              alt="Boiler Room"
-              fill
-              sizes="(max-width: 640px) 36px, 44px"
-              className="object-contain"
-              priority
-            />
-          </span>
-          <span className="font-display truncate text-base font-semibold uppercase tracking-[0.15em] text-[#f3f5fd] sm:text-lg sm:tracking-[0.2em]">
-            Boiler Room
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-[#0f1a2d]/46 shadow-[0_8px_18px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+            <span className="relative h-6 w-6 overflow-hidden rounded-md">
+              <Image
+                src={LOGO_SRC}
+                alt="Boiler Room"
+                fill
+                sizes="24px"
+                className="object-contain"
+                priority
+              />
+            </span>
           </span>
         </Link>
-        <nav
-          className="flex shrink-0 justify-end gap-x-4 text-[11px] font-medium text-[#9ca6c6] sm:gap-x-6 sm:text-xs md:text-sm"
-          aria-label="Sections"
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/22 bg-[#101828]/44 text-[#ecf2ff] backdrop-blur-md transition hover:bg-[#18243a]/70"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-main-menu"
         >
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="touch-manipulation whitespace-nowrap py-1 transition-colors hover:text-[#e6edff]"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+          {menuOpen ? (
+            <X className="h-4 w-4" strokeWidth={2.2} />
+          ) : (
+            <Menu className="h-4 w-4" strokeWidth={2.2} />
+          )}
+        </button>
+          </div>
+        </div>
+
+        {menuOpen ? (
+          <div
+            id="mobile-main-menu"
+            className="absolute right-0 top-[calc(100%+0.55rem)] z-20 w-[11rem] rounded-2xl border border-[#cad6ff33] bg-[#0a101c]/90 p-2 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.75)] backdrop-blur-2xl"
+          >
+            <nav className="flex flex-col gap-1" aria-label="Sections">
+              {links.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-xl px-3 py-2 text-xs font-medium tracking-wide text-[#c8d4f5] transition hover:bg-[#bacbff14] hover:text-[#f4f7ff]"
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <Link
+                href="/book"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl bg-[#eef3ff] px-3 py-2 text-xs font-semibold tracking-wide text-[#0b0f16]"
+              >
+                Book Table
+              </Link>
+            </nav>
+          </div>
+        ) : null}
       </Container>
     </header>
   );

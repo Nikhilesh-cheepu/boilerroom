@@ -1,8 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Volume2, VolumeX } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVideoBeat } from "@/hooks/useVideoBeat";
 import { cn } from "@/lib/utils";
 
@@ -16,25 +15,40 @@ export function FullBleedHero({ videoSrc }: Props) {
   const beat = useVideoBeat(videoRef, unmuted);
   const reduceMotion = useReducedMotion() ?? false;
 
-  const toggleMute = useCallback(() => {
+  const applyAudioState = (nextUnmuted: boolean) => {
     const v = videoRef.current;
     if (!v) return;
-    const next = !unmuted;
-    setUnmuted(next);
-    v.muted = !next;
+    setUnmuted(nextUnmuted);
+    v.muted = !nextUnmuted;
     void v.play().catch(() => {
       /* autoplay policies */
     });
+  };
+
+  useEffect(() => {
+    const onToggle = () => applyAudioState(!unmuted);
+    const onSet = (evt: Event) => {
+      const custom = evt as CustomEvent<{ unmuted?: boolean }>;
+      if (typeof custom.detail?.unmuted === "boolean") {
+        applyAudioState(custom.detail.unmuted);
+      }
+    };
+    window.addEventListener("hero-audio-toggle", onToggle as EventListener);
+    window.addEventListener("hero-audio-set", onSet as EventListener);
+    return () => {
+      window.removeEventListener("hero-audio-toggle", onToggle as EventListener);
+      window.removeEventListener("hero-audio-set", onSet as EventListener);
+    };
   }, [unmuted]);
 
   return (
     <section
       id="top"
-      className="relative isolate w-full overflow-hidden bg-[#07090e] px-3 pt-2 sm:px-4"
+      className="relative isolate w-full overflow-hidden bg-[#07090e]"
     >
       <motion.div
         className={cn(
-          "relative mx-auto aspect-[9/16] w-full max-h-[100dvh] max-w-[560px] overflow-hidden rounded-[24px] border border-[#cad6ff24]",
+          "relative h-[100dvh] w-full overflow-hidden",
           !reduceMotion && "br-animate-frame-glow",
         )}
         initial={
@@ -104,26 +118,6 @@ export function FullBleedHero({ videoSrc }: Props) {
           aria-hidden
         />
 
-        <div className="pointer-events-auto absolute bottom-6 right-4 z-[30] sm:bottom-8 sm:right-6">
-          <motion.button
-            type="button"
-            onClick={toggleMute}
-            disabled={!videoSrc}
-            whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-            whileHover={reduceMotion ? undefined : { scale: 1.06 }}
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-full border border-[#cad6ff45] bg-[#0e1320]/80 text-[#d6e1ff] shadow-lg shadow-black/40 backdrop-blur-md transition hover:border-[#e3ebff70] hover:bg-[#151c2b]/90 disabled:cursor-not-allowed disabled:opacity-40",
-              unmuted && "border-[#e3ebff70] text-[#f4f7ff]",
-            )}
-            aria-label={unmuted ? "Mute video" : "Unmute video"}
-          >
-            {unmuted ? (
-              <Volume2 className="h-5 w-5" strokeWidth={2} />
-            ) : (
-              <VolumeX className="h-5 w-5" strokeWidth={2} />
-            )}
-          </motion.button>
-        </div>
       </motion.div>
     </section>
   );

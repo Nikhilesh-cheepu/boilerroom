@@ -53,6 +53,17 @@ export default function AdminHomePage() {
         </li>
         <li>
           <Link
+            href="/admin/gallery"
+            className="block rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-950/25 to-transparent p-5 transition hover:border-indigo-400/45"
+          >
+            <p className="font-semibold text-white">Gallery</p>
+            <p className="mt-1 text-sm text-zinc-400">
+              Upload and manage floating preview + full gallery.
+            </p>
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/admin/events"
             className="block rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-br-accent/50"
           >
