@@ -7,11 +7,11 @@ export default function AdminHomePage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold uppercase tracking-wide text-white">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-white">
             Admin
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
-            Manage homepage content, hero video, contact details, menus, and FAQs.
+            Manage homepage content, media, contact, menus, and FAQs.
           </p>
         </div>
         <form action={logoutAction}>
@@ -34,9 +34,9 @@ export default function AdminHomePage() {
             href="/admin/settings"
             className="block rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-5 transition hover:border-teal-500/40"
           >
-            <p className="font-semibold text-white">Hero video</p>
+            <p className="font-semibold text-white">Site &amp; hero</p>
             <p className="mt-1 text-sm text-zinc-400">
-              Vercel Blob upload for the homepage hero.
+              Hero video (Blob) and site contact fields.
             </p>
           </Link>
         </li>

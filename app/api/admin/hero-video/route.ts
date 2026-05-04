@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { isAdminSession } from "@/lib/auth/admin-server";
+import { HERO_BLOB_PREFIX } from "@/lib/admin/hero-video/constants";
 import {
   deleteBlobUrlIfApplicable,
   isBlobConfigured,
@@ -27,9 +28,12 @@ export async function POST(request: Request): Promise<NextResponse> {
     const json = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async () => {
+      onBeforeGenerateToken: async (pathname) => {
         if (!(await isAdminSession())) {
           throw new Error("Not signed in.");
+        }
+        if (!pathname.startsWith(HERO_BLOB_PREFIX)) {
+          throw new Error("Invalid upload path.");
         }
         return {
           allowedContentTypes: [
