@@ -48,6 +48,14 @@ export async function GET(request: Request): Promise<Response> {
     const status =
       range && safeHeaders.has("content-range") ? 206 : 200;
 
+    // Blob URLs are immutable; cache aggressively so repeat views skip origin round-trips.
+    if (!safeHeaders.has("cache-control")) {
+      safeHeaders.set(
+        "Cache-Control",
+        "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+      );
+    }
+
     return new Response(res.stream, {
       status,
       headers: safeHeaders,
@@ -58,9 +66,16 @@ export async function GET(request: Request): Promise<Response> {
       headers: rangeHeaders,
       cache: "force-cache",
     });
+    const outHeaders = new Headers(upstream.headers);
+    if (upstream.ok && !outHeaders.has("cache-control")) {
+      outHeaders.set(
+        "Cache-Control",
+        "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+      );
+    }
     return new Response(upstream.body, {
       status: upstream.status,
-      headers: upstream.headers,
+      headers: outHeaders,
     });
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { useVideoBeat } from "@/hooks/useVideoBeat";
 import { cn } from "@/lib/utils";
 
@@ -9,10 +9,45 @@ type Props = {
   videoSrc: string | null;
 };
 
+type LoopProps = {
+  videoSrc: string;
+  unmuted: boolean;
+};
+
+const HeroLoopVideo = forwardRef<HTMLVideoElement, LoopProps>(
+  function HeroLoopVideo({ videoSrc, unmuted }, ref) {
+    const [ready, setReady] = useState(false);
+    const markReady = useCallback(() => setReady(true), []);
+
+    return (
+      <video
+        ref={ref}
+        className={cn(
+          "absolute inset-0 z-[10] h-full w-full object-cover transition-opacity duration-500 ease-out",
+          ready ? "opacity-100" : "opacity-0",
+        )}
+        src={videoSrc}
+        autoPlay
+        muted={!unmuted}
+        loop
+        playsInline
+        preload="auto"
+        onLoadedData={markReady}
+        onCanPlay={markReady}
+        crossOrigin={
+          videoSrc.startsWith("http://") || videoSrc.startsWith("https://")
+            ? "anonymous"
+            : undefined
+        }
+      />
+    );
+  },
+);
+
 export function FullBleedHero({ videoSrc }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [unmuted, setUnmuted] = useState(false);
-  const beat = useVideoBeat(videoRef, unmuted);
+  const beat = useVideoBeat(videoRef, unmuted, videoSrc);
   const reduceMotion = useReducedMotion() ?? false;
 
   const applyAudioState = (nextUnmuted: boolean) => {
@@ -91,20 +126,11 @@ export function FullBleedHero({ videoSrc }: Props) {
         />
 
         {videoSrc ? (
-          <video
+          <HeroLoopVideo
+            key={videoSrc}
             ref={videoRef}
-            className="absolute inset-0 z-[10] h-full w-full object-cover"
-            src={videoSrc}
-            autoPlay
-            muted={!unmuted}
-            loop
-            playsInline
-            preload="auto"
-            crossOrigin={
-              videoSrc.startsWith("http://") || videoSrc.startsWith("https://")
-                ? "anonymous"
-                : undefined
-            }
+            videoSrc={videoSrc}
+            unmuted={unmuted}
           />
         ) : (
           <div

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import {
   drinksMenu,
@@ -54,13 +55,43 @@ function mapCategory(c: {
   };
 }
 
+/** Deduped per request — hero + dock can resolve without waiting on menus. */
+const getSiteSettingsCached = cache(async () =>
+  prisma.siteSettings.findUnique({ where: { id: 1 } }),
+);
+
+const getMenuCategoriesCached = cache(async () =>
+  prisma.menuCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: { items: { orderBy: { sortOrder: "asc" } } },
+  }),
+);
+
+/** Fast path for streaming hero (settings only, parallel with menu query elsewhere). */
+export async function getHeroVideoForHome(): Promise<string | null> {
+  try {
+    const settings = await getSiteSettingsCached();
+    return resolveHeroVideoSrc(settings?.heroVideoPath ?? null);
+  } catch {
+    return null;
+  }
+}
+
+export async function getSiteContactForHome(): Promise<ResolvedSiteContact> {
+  try {
+    const settings = await getSiteSettingsCached();
+    return resolveSiteContact(settings ?? undefined);
+  } catch {
+    return resolveSiteContact(undefined);
+  }
+}
+
 export async function getHomePageData(): Promise<HomePageData> {
   try {
-    const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-    const categories = await prisma.menuCategory.findMany({
-      orderBy: { sortOrder: "asc" },
-      include: { items: { orderBy: { sortOrder: "asc" } } },
-    });
+    const [settings, categories] = await Promise.all([
+      getSiteSettingsCached(),
+      getMenuCategoriesCached(),
+    ]);
 
     const food = categories
       .filter((c) => c.kind === "food")
