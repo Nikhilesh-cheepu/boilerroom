@@ -17,6 +17,3 @@ export const HERO_VIDEO_MIME_TYPES = new Set<string>([
   "video/quicktime",
   "video/x-m4v",
 ]);
-
-/** Use multipart client upload for larger files (more reliable for big videos). */
-export const HERO_VIDEO_MULTIPART_THRESHOLD_BYTES = 4 * 1024 * 1024;

@@ -2,7 +2,7 @@
 
 import { Film, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useHeroVideoUpload } from "@/hooks/useHeroVideoUpload";
 import { formatFileSize } from "@/lib/admin/hero-video/format-file-size";
@@ -17,7 +17,6 @@ type Props = {
 
 export function HeroVideoUploader({ blobReady }: Props) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const { phase, progress, message, uploadFile, resetStatus } =
     useHeroVideoUpload();
   const [file, setFile] = useState<File | null>(null);
@@ -33,7 +32,8 @@ export function HeroVideoUploader({ blobReady }: Props) {
     };
   }, [previewUrl]);
 
-  const busy = phase === "uploading" || phase === "saving" || isPending;
+  /** Do not tie `busy` to `router.refresh()` / transitions — that can stick “loading” forever. */
+  const busy = phase === "uploading" || phase === "saving";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,16 +43,16 @@ export function HeroVideoUploader({ blobReady }: Props) {
       toast.error(v.message);
       return;
     }
-    const ok = await uploadFile(file);
-    if (ok) {
+    const result = await uploadFile(file);
+    if (result.ok) {
       toast.success("Hero video updated", {
         description: "Homepage is serving the new clip.",
       });
       setFile(null);
       resetStatus();
-      startTransition(() => router.refresh());
-    } else if (message) {
-      toast.error(message);
+      void router.refresh();
+    } else {
+      toast.error(result.error);
     }
   }
 

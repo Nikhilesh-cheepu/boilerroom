@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
  * `next dev` can replace the singleton after `npx prisma generate` without
  * only relying on a full process restart (stale client → prisma.venue undefined).
  */
-const PRISMA_SCHEMA_EPOCH = "2026-04-23-reservations";
+const PRISMA_SCHEMA_EPOCH = "2026-05-04-gallery";
 
 const globalForPrisma = globalThis as unknown as {
   __br_prisma__?: PrismaClient;
