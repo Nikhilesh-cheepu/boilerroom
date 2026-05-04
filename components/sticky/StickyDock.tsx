@@ -3,15 +3,39 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { MessageCircle, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Drawer } from "vaul";
 import { ContactSheetPortal } from "@/components/contact/ContactSheet";
 import type { ResolvedSiteContact } from "@/lib/site-contact";
 import { cn } from "@/lib/utils";
 
-export function StickyDock({ contact }: { contact: ResolvedSiteContact }) {
+export function StickyDock({
+  contact,
+  promoLines,
+}: {
+  contact: ResolvedSiteContact;
+  /** From venue offers only; empty array hides the promo pill */
+  promoLines?: string[];
+}) {
   const reduceMotion = useReducedMotion() ?? false;
   const [unmuted, setUnmuted] = useState(false);
+  const [promoIndex, setPromoIndex] = useState(0);
+  const lines = useMemo(
+    () => (promoLines ?? []).map((line) => line.trim()).filter(Boolean),
+    [promoLines],
+  );
+
+  useEffect(() => {
+    setPromoIndex(0);
+  }, [lines.length]);
+
+  useEffect(() => {
+    if (lines.length <= 1) return;
+    const id = window.setInterval(() => {
+      setPromoIndex((i) => (i + 1) % lines.length);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [lines.length]);
 
   const toggleAudio = () => {
     setUnmuted((prev) => {
@@ -28,11 +52,19 @@ export function StickyDock({ contact }: { contact: ResolvedSiteContact }) {
   return (
     <Drawer.Root shouldScaleBackground={false}>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="pointer-events-auto mb-2 rounded-full border border-emerald-400/25 bg-emerald-950/50 px-3 py-1.5 shadow-sm backdrop-blur-md">
-          <p className="text-center text-[11px] font-semibold leading-tight tracking-wide text-emerald-100 sm:text-xs">
-            30% off · Book this week
-          </p>
-        </div>
+        {lines.length > 0 ? (
+          <div className="pointer-events-auto mb-2 rounded-full border border-emerald-400/25 bg-emerald-950/50 px-3 py-1.5 shadow-sm backdrop-blur-md">
+            <motion.p
+              key={`${promoIndex}-${lines[promoIndex]}`}
+              initial={reduceMotion ? false : { opacity: 0, y: 3 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="text-center text-[11px] font-semibold leading-tight tracking-wide text-emerald-100 sm:text-xs"
+            >
+              {lines[promoIndex]}
+            </motion.p>
+          </div>
+        ) : null}
 
         <motion.div
           className={cn(

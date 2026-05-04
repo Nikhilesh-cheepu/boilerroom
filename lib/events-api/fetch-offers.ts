@@ -16,6 +16,8 @@ function parseOffer(raw: unknown): VenueOffer | null {
   const id = o.id;
   if (typeof id !== "string" || !id.trim()) return null;
 
+  const badgeRaw =
+    o.badgeText ?? o.promoBadge ?? o.stickyLine ?? o.discountLabel ?? o.promoLine;
   return {
     id: id.trim(),
     imageUrl: asString(o.imageUrl),
@@ -25,6 +27,7 @@ function parseOffer(raw: unknown): VenueOffer | null {
     entryLabel: asString(o.entryLabel),
     capacityText: asString(o.capacityText),
     endDate: asString(o.endDate),
+    badgeText: asString(badgeRaw),
   };
 }
 

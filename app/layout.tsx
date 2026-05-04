@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { DM_Sans, Oswald } from "next/font/google";
 import "./globals.css";
 
@@ -52,6 +53,7 @@ export default function RootLayout({
         className={`${sans.className} min-h-full bg-br-bg text-br-text font-sans`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

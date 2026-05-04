@@ -8,6 +8,8 @@ export type VenueOffer = {
   entryLabel: string | null;
   capacityText: string | null;
   endDate: string | null;
+  /** Optional short line for sticky / promo UI (API may send under several keys). */
+  badgeText: string | null;
 };
 
 export type VenueOffersLoadState =
