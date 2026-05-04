@@ -1,4 +1,5 @@
-import { del, put } from "@vercel/blob";
+import { del, put, type PutBlobResult } from "@vercel/blob";
+import { isPrivateStorePublicAccessError } from "@/lib/blob/private-store-error";
 
 function getToken() {
   const t = process.env.BLOB_READ_WRITE_TOKEN?.trim();
@@ -22,17 +23,32 @@ function extFromMime(mime: string): string {
   return "mp4";
 }
 
-function isPrivateStorePublicAccessError(error: unknown): boolean {
-  const msg = error instanceof Error ? error.message : String(error ?? "");
-  return msg.toLowerCase().includes("cannot use public access on a private store");
-}
+type PutHeroExtras = Pick<
+  Parameters<typeof put>[2],
+  "addRandomSuffix" | "multipart" | "contentType"
+>;
 
-/** Upload hero video to Vercel Blob; returns the Blob URL. */
-export async function uploadHeroBlob(file: File): Promise<string> {
+/** Server `put` — public store prefers public blobs; private stores fall back to `private`. */
+export async function putBlobRespectingStoreAccess(
+  pathname: string,
+  file: File,
+  extras: PutHeroExtras = {},
+): Promise<PutBlobResult> {
   const token = getToken();
   if (!token) {
     throw new Error("BLOB_READ_WRITE_TOKEN is not set.");
   }
+  const base = { token, ...extras };
+  try {
+    return await put(pathname, file, { ...base, access: "public" });
+  } catch (error) {
+    if (!isPrivateStorePublicAccessError(error)) throw error;
+    return await put(pathname, file, { ...base, access: "private" });
+  }
+}
+
+/** Upload hero video to Vercel Blob; returns the Blob URL. */
+export async function uploadHeroBlob(file: File): Promise<string> {
   const mime = file.type || "application/octet-stream";
   if (!ALLOWED_MIME.has(mime)) {
     throw new Error("Use MP4, WebM, or MOV.");
@@ -43,25 +59,9 @@ export async function uploadHeroBlob(file: File): Promise<string> {
 
   const ext = extFromMime(mime);
   const pathname = `boiler-room/hero/${Date.now()}.${ext}`;
-
-  // Try public first for best CDN delivery on the homepage.
-  // If the store is private, fall back to private access automatically.
-  let blob;
-  try {
-    blob = await put(pathname, file, {
-      access: "public",
-      token,
-      contentType: mime,
-    });
-  } catch (error) {
-    if (!isPrivateStorePublicAccessError(error)) throw error;
-    blob = await put(pathname, file, {
-      access: "private",
-      token,
-      contentType: mime,
-    });
-  }
-
+  const blob = await putBlobRespectingStoreAccess(pathname, file, {
+    contentType: mime,
+  });
   return blob.url;
 }
 

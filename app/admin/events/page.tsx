@@ -1,24 +1,21 @@
-import Link from "next/link";
 import { createEventAction, deleteEventAction } from "@/app/actions/cms";
-import { AdminNav } from "@/components/admin/AdminNav";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminEventsPage() {
   const events = await prisma.event.findMany({ orderBy: { sortOrder: "asc" } });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <Link href="/admin" className="text-sm text-zinc-500 hover:text-zinc-300">
-        ← Admin home
-      </Link>
-      <h1 className="mt-2 font-display text-2xl font-semibold uppercase text-white">
-        Events
-      </h1>
-      <div className="mt-6">
-        <AdminNav />
-      </div>
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+      <header className="mb-8 border-b border-white/[0.08] pb-6">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Events
+        </h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Homepage “What’s on” carousel.
+        </p>
+      </header>
 
-      <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10">
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-white/10 bg-white/5 text-zinc-400">
             <tr>
@@ -45,7 +42,7 @@ export default async function AdminEventsPage() {
                     <input type="hidden" name="id" value={e.id} />
                     <button
                       type="submit"
-                      className="text-red-400 hover:underline"
+                      className="text-red-400/90 transition hover:text-red-300"
                     >
                       Delete
                     </button>
@@ -59,11 +56,9 @@ export default async function AdminEventsPage() {
 
       <form
         action={createEventAction}
-        className="mt-10 grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 sm:grid-cols-2"
+        className="mt-10 grid gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:grid-cols-2"
       >
-        <h2 className="sm:col-span-2 text-lg font-semibold text-white">
-          Add event
-        </h2>
+        <h2 className="text-lg font-semibold text-white sm:col-span-2">Add event</h2>
         <label className="text-sm text-zinc-300 sm:col-span-2">
           Title
           <input
@@ -109,7 +104,7 @@ export default async function AdminEventsPage() {
         <div className="sm:col-span-2">
           <button
             type="submit"
-            className="min-h-11 rounded-xl bg-br-accent px-6 font-semibold text-white"
+            className="min-h-11 rounded-xl bg-sky-600 px-6 text-sm font-semibold text-white transition hover:bg-sky-500"
           >
             Add event
           </button>

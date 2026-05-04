@@ -79,11 +79,11 @@ export async function updateSiteContactAction(formData: FormData): Promise<void>
     update: patch,
   });
   revalidatePath("/");
-  revalidatePath("/admin/settings");
+  revalidatePath("/admin");
   revalidatePath("/admin/contact");
 }
 
-/* Hero video upload is handled by POST /api/admin/hero-video (route handler). */
+/* Hero video: client token POST + `put()` + PATCH — see /api/admin/hero-video */
 
 export async function clearHeroVideoAction(): Promise<void> {
   await guard();
@@ -112,6 +112,8 @@ export async function clearHeroVideoAction(): Promise<void> {
     update: { heroVideoPath: null },
   });
   revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/hero");
 }
 
 export async function createEventAction(formData: FormData): Promise<void> {
@@ -134,6 +136,7 @@ export async function createEventAction(formData: FormData): Promise<void> {
     },
   });
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/admin/events");
 }
 
@@ -143,6 +146,7 @@ export async function deleteEventAction(formData: FormData): Promise<void> {
   if (!id) return;
   await prisma.event.delete({ where: { id } });
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/admin/events");
 }
 
@@ -169,7 +173,7 @@ export async function createResidentAction(formData: FormData): Promise<void> {
     },
   });
   revalidatePath("/");
-  revalidatePath("/admin/djs");
+  revalidatePath("/admin");
 }
 
 export async function deleteResidentAction(formData: FormData): Promise<void> {
@@ -178,7 +182,7 @@ export async function deleteResidentAction(formData: FormData): Promise<void> {
   if (!id) return;
   await prisma.resident.delete({ where: { id } });
   revalidatePath("/");
-  revalidatePath("/admin/djs");
+  revalidatePath("/admin");
 }
 
 export async function createFaqAction(formData: FormData): Promise<void> {
@@ -191,7 +195,7 @@ export async function createFaqAction(formData: FormData): Promise<void> {
     data: { sortOrder: (last?.sortOrder ?? 0) + 1, q, a },
   });
   revalidatePath("/");
-  revalidatePath("/admin/faq");
+  revalidatePath("/admin");
 }
 
 export async function deleteFaqAction(formData: FormData): Promise<void> {
@@ -200,7 +204,7 @@ export async function deleteFaqAction(formData: FormData): Promise<void> {
   if (!id) return;
   await prisma.faqItem.delete({ where: { id } });
   revalidatePath("/");
-  revalidatePath("/admin/faq");
+  revalidatePath("/admin");
 }
 
 export async function createWeeklyAction(formData: FormData): Promise<void> {
@@ -216,7 +220,7 @@ export async function createWeeklyAction(formData: FormData): Promise<void> {
     data: { sortOrder: (last?.sortOrder ?? 0) + 1, day, vibe, time },
   });
   revalidatePath("/");
-  revalidatePath("/admin/weekly");
+  revalidatePath("/admin");
 }
 
 export async function deleteWeeklyAction(formData: FormData): Promise<void> {
@@ -225,7 +229,7 @@ export async function deleteWeeklyAction(formData: FormData): Promise<void> {
   if (!id) return;
   await prisma.weeklySlot.delete({ where: { id } });
   revalidatePath("/");
-  revalidatePath("/admin/weekly");
+  revalidatePath("/admin");
 }
 
 export async function createMenuCategoryAction(formData: FormData): Promise<void> {
@@ -240,7 +244,7 @@ export async function createMenuCategoryAction(formData: FormData): Promise<void
     data: { sortOrder: (last?.sortOrder ?? 0) + 1, label, kind },
   });
   revalidatePath("/");
-  revalidatePath("/admin/menu");
+  revalidatePath("/admin");
 }
 
 export async function createMenuItemAction(formData: FormData): Promise<void> {
@@ -264,7 +268,7 @@ export async function createMenuItemAction(formData: FormData): Promise<void> {
     },
   });
   revalidatePath("/");
-  revalidatePath("/admin/menu");
+  revalidatePath("/admin");
 }
 
 export async function deleteMenuItemAction(formData: FormData): Promise<void> {
@@ -273,7 +277,7 @@ export async function deleteMenuItemAction(formData: FormData): Promise<void> {
   if (!id) return;
   await prisma.menuItem.delete({ where: { id } });
   revalidatePath("/");
-  revalidatePath("/admin/menu");
+  revalidatePath("/admin");
 }
 
 export async function deleteMenuCategoryAction(formData: FormData): Promise<void> {
@@ -282,7 +286,7 @@ export async function deleteMenuCategoryAction(formData: FormData): Promise<void
   if (!id) return;
   await prisma.menuCategory.delete({ where: { id } });
   revalidatePath("/");
-  revalidatePath("/admin/menu");
+  revalidatePath("/admin");
 }
 
 export async function addGalleryImageFromUpload(

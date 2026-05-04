@@ -100,7 +100,11 @@ export function FullBleedHero({ videoSrc }: Props) {
             loop
             playsInline
             preload="auto"
-            crossOrigin="anonymous"
+            crossOrigin={
+              videoSrc.startsWith("http://") || videoSrc.startsWith("https://")
+                ? "anonymous"
+                : undefined
+            }
           />
         ) : (
           <div

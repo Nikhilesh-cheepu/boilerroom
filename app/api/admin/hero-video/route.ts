@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { isAdminSession } from "@/lib/auth/admin-server";
 import { HERO_BLOB_PREFIX } from "@/lib/admin/hero-video/constants";
-import {
-  deleteBlobUrlIfApplicable,
-  isBlobConfigured,
-} from "@/lib/blob/hero";
-import { prisma } from "@/lib/prisma";
+import { isBlobConfigured } from "@/lib/blob/hero";
+import { saveHeroVideoUrlToDb } from "@/lib/admin/hero-video/save-hero-url-to-db";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
+/**
+ * Client `upload()` from `@vercel/blob/client` — token + completion handshake.
+ * Do **not** pass `onUploadCompleted`: if set, the SDK registers a callback URL that
+ * Vercel cannot reach on localhost, which causes failed completion + upload retries (~100% loop).
+ */
 export async function POST(request: Request): Promise<NextResponse> {
   if (!isBlobConfigured()) {
     return NextResponse.json(
@@ -46,11 +47,6 @@ export async function POST(request: Request): Promise<NextResponse> {
           addRandomSuffix: true,
         };
       },
-      onUploadCompleted: async ({ blob }) => {
-        // Keep callback side-effect free to avoid client retries getting stuck at 99%.
-        // We persist `blob.url` in PATCH /api/admin/hero-video from the browser after upload succeeds.
-        void blob;
-      },
     });
     return NextResponse.json(json);
   } catch (e) {
@@ -74,24 +70,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid uploaded URL." }, { status: 400 });
   }
 
-  const prev = await prisma.siteSettings.findUnique({ where: { id: 1 } });
-  if (prev?.heroVideoPath && prev.heroVideoPath !== url) {
-    await deleteBlobUrlIfApplicable(prev.heroVideoPath);
-  }
-  await prisma.siteSettings.upsert({
-    where: { id: 1 },
-    create: {
-      id: 1,
-      tagline: prev?.tagline ?? "Sound system loud. Kitchen open late.",
-      heroSub:
-        prev?.heroSub ??
-        "Tonight’s lineup, residents, food & bottle list — scroll like a setlist.",
-      heroVideoPath: url,
-    },
-    update: { heroVideoPath: url },
-  });
+  await saveHeroVideoUrlToDb(url);
 
-  revalidatePath("/");
-  revalidatePath("/admin/settings");
   return NextResponse.json({ ok: true, url });
 }

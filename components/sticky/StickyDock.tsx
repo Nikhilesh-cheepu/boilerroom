@@ -16,9 +16,14 @@ export function StickyDock({ contact }: { contact: ResolvedSiteContact }) {
   const toggleAudio = () => {
     setUnmuted((prev) => {
       const next = !prev;
-      window.dispatchEvent(
-        new CustomEvent("hero-audio-set", { detail: { unmuted: next } }),
-      );
+      // Never dispatch from inside a setState updater: listeners may call
+      // setState on other components (FullBleedHero) while React is still
+      // resolving this update → "Cannot update X while rendering Y".
+      queueMicrotask(() => {
+        window.dispatchEvent(
+          new CustomEvent("hero-audio-set", { detail: { unmuted: next } }),
+        );
+      });
       return next;
     });
   };

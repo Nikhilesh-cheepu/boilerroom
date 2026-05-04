@@ -13,7 +13,7 @@ model SiteSettings {
   heroSub       String
   /// HTTPS URL for hero video (e.g. Vercel Blob) or legacy /uploads/... path
   heroVideoPath String?
-  /// E.164 digits (country code, no +) for tel: — editable in /admin/settings
+  /// E.164 digits (country code, no +) for tel: — editable in /admin/contact
   contactPhoneE164       String?
   /// WhatsApp number for wa.me (digits only); falls back to phone if empty
   contactWhatsappE164  String?

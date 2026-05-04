@@ -25,11 +25,15 @@ export async function GET(request: Request): Promise<Response> {
   if (!target) return new Response("Invalid source", { status: 400 });
 
   const range = request.headers.get("range");
+  const rangeHeaders = range ? { Range: range } : undefined;
 
   try {
-    const res = await get(target.pathname, {
+    // Must pass the full Blob URL, not pathname alone: pathname + `access: "private"`
+    // builds `*.private.blob.vercel-storage.com`, while uploads often return
+    // `*.public.blob.vercel-storage.com` — wrong host → empty / broken video.
+    const res = await get(target.url, {
       access: "private",
-      headers: range ? { range } : undefined,
+      headers: rangeHeaders,
       useCache: true,
     });
 
@@ -41,14 +45,17 @@ export async function GET(request: Request): Promise<Response> {
       return new Response(null, { status: 304, headers: safeHeaders });
     }
 
+    const status =
+      range && safeHeaders.has("content-range") ? 206 : 200;
+
     return new Response(res.stream, {
-      status: 200,
+      status,
       headers: safeHeaders,
     });
   } catch {
-    // Fallback for public blobs.
+    // Unauthenticated fetch only works for public blobs (private → 403).
     const upstream = await fetch(target.url, {
-      headers: range ? { range } : undefined,
+      headers: rangeHeaders,
       cache: "force-cache",
     });
     return new Response(upstream.body, {

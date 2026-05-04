@@ -72,7 +72,7 @@ DATABASE_URL="$DATABASE_PUBLIC_URL" npm run db:studio
 | `DATABASE_URL` | Primary Postgres URL used by app runtime in production and by Prisma CLI. |
 | `ADMIN_PASSWORD` | Plain password for `/admin` (keep private). |
 | `ADMIN_SESSION_SECRET` | Optional. If set (16+ chars), used to sign admin JWT instead of deriving from `ADMIN_PASSWORD`. |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob — hero video uploads from `/admin/settings`. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob — hero video uploads from `/admin/hero`. |
 | `EVENTS_API_BASE_URL` | Server-only. Bassik API origin (no trailing slash required); `GET …/api/venues/boiler-room`. |
 | `EVENTS_API_FETCH_TIMEOUT_MS` | Optional. Abort slow Lineup fetches (default `4000`). |
 | `NEXT_PUBLIC_PHONE_E164` | Digits only (country code, no `+`). Powers `tel:` and `wa.me`. |
