@@ -33,7 +33,7 @@ export function StickyDock({
     if (lines.length <= 1) return;
     const id = window.setInterval(() => {
       setPromoIndex((i) => (i + 1) % lines.length);
-    }, 1000);
+    }, 3000);
     return () => window.clearInterval(id);
   }, [lines.length]);
 

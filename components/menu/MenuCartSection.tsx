@@ -89,6 +89,9 @@ export function MenuCartSection({
           <h2 className="font-display text-[2rem] font-semibold tracking-tight text-[#f3f5fd] sm:text-[2.2rem] md:text-[2.45rem]">
             Menu
           </h2>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#b6bfd9]/75">
+            We are currently updating our menu. Please call us for the most accurate menu and pricing.
+          </p>
         </motion.header>
 
         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
