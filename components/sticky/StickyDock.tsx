@@ -64,15 +64,12 @@ export function StickyDock({
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
         {lines.length > 0 ? (
           <div className="pointer-events-auto mb-2 rounded-full border border-emerald-400/25 bg-emerald-950/50 px-3 py-1.5 shadow-sm backdrop-blur-md">
-            <motion.p
+            <p
               key={`${promoIndex}-${lines[promoIndex]}`}
-              initial={false}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
               className="text-center text-[11px] font-semibold leading-tight tracking-wide text-emerald-100 sm:text-xs"
             >
               {lines[promoIndex]}
-            </motion.p>
+            </p>
           </div>
         ) : null}
 

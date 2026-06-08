@@ -1,9 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
-import { GalleryCoverflow } from "./GalleryCoverflow";
 import { GalleryModal } from "./GalleryModal";
+
+const GalleryCoverflow = dynamic(
+  () =>
+    import("./GalleryCoverflow").then((m) => m.GalleryCoverflow),
+  { ssr: false, loading: () => <CoverflowSkeleton /> },
+);
 
 type Props = {
   loading?: boolean;

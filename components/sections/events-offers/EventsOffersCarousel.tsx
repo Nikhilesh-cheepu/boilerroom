@@ -5,11 +5,21 @@ import Image from "next/image";
 import type { VenueOffer } from "@/lib/events-api/types";
 import { cn } from "@/lib/utils";
 
-const dateFmt = new Intl.DateTimeFormat("en-IN", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
 
 function formatEventDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -18,7 +28,7 @@ function formatEventDate(iso: string | null): string | null {
     ? new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]))
     : new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return dateFmt.format(d);
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
 function getDjLine(offer: VenueOffer): string | null {
@@ -41,17 +51,7 @@ function OfferCard({
   const hasImage = Boolean(offer.imageUrl?.trim());
 
   return (
-    <motion.article
-      initial={false}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        delay: reduceMotion ? 0 : index * 0.07,
-        duration: 0.45,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className="w-[68vw] max-w-[220px] shrink-0 snap-start sm:w-[190px] sm:max-w-[212px]"
-    >
+    <article className="w-[68vw] max-w-[220px] shrink-0 snap-start sm:w-[190px] sm:max-w-[212px]">
       <motion.div
         whileHover={
           reduceMotion
@@ -101,7 +101,7 @@ function OfferCard({
           ) : null}
         </div>
       </motion.div>
-    </motion.article>
+    </article>
   );
 }
 

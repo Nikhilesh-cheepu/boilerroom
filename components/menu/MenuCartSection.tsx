@@ -138,14 +138,14 @@ export function MenuCartSection({
                 type="button"
                 aria-label="Close menu overlay"
                 className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-[1px]"
-                initial={reduceMotion ? false : { opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 exit={reduceMotion ? undefined : { opacity: 0 }}
                 onClick={() => setPanelOpen(false)}
               />
               <motion.div
               key="menu-panel"
-              initial={reduceMotion ? undefined : { y: "-110%", opacity: 0.92 }}
+              initial={false}
               animate={{ y: 0, opacity: 1 }}
               exit={reduceMotion ? undefined : { y: "-110%", opacity: 0.92 }}
               transition={{

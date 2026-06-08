@@ -87,14 +87,14 @@ export function GalleryCoverflow({
   return (
     <div className="mx-auto w-full max-w-md select-none px-2 py-4">
       <div
-        className="relative"
+        className="relative pb-10 sm:pb-12"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={onTouchStartTrack}
         onTouchEnd={onTouchEndTrack}
       >
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[68%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          className="pointer-events-none absolute left-1/2 top-[42%] h-[68%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
           style={{ backgroundColor: `${accentColor}24` }}
           aria-hidden
         />
@@ -176,7 +176,7 @@ export function GalleryCoverflow({
 
       {count > 1 ? (
         <div
-          className="relative z-10 mt-5 flex min-h-[8px] flex-wrap items-center justify-center gap-1.5"
+          className="relative z-50 mt-3 flex min-h-[10px] flex-wrap items-center justify-center gap-1.5 sm:mt-4"
           role="tablist"
           aria-label="Gallery position"
         >

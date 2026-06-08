@@ -6,24 +6,23 @@ import "./globals.css";
 const display = Oswald({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700"],
+  preload: false,
+  display: "swap",
 });
 
 const sans = DM_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  preload: true,
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Boiler Room — Club · Kitchen · Sound",
   description:
     "Events, residents, food & drinks. Book a table on WhatsApp. Late-night energy, every week.",
-  icons: {
-    icon: "/boilerroom-logo.png",
-    shortcut: "/boilerroom-logo.png",
-    apple: "/boilerroom-logo.png",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
