@@ -1,23 +1,33 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const AUTO_MS = 3800;
-const SLIDE_W = 220;
-const GAP = 12;
-const STEP = SLIDE_W + GAP;
-
-const SLIDE_EASE = [0.22, 1, 0.36, 1] as const;
+/** Horizontal distance between card centers — tight overlap like Bassik coverflow. */
+const X_STEP = 52;
 const SLIDE_MS = 0.55;
+const SLIDE_EASE = [0.22, 1, 0.36, 1] as const;
+const CARD_RING = "ring-1 ring-[#7eb4ff]/55";
 
-function stackStyle(distance: number) {
-  if (distance === 0) return { scale: 1, opacity: 1, zIndex: 30 };
-  if (distance === 1) return { scale: 0.82, opacity: 0.88, zIndex: 20 };
-  if (distance === 2) return { scale: 0.7, opacity: 0.62, zIndex: 10 };
-  return { scale: 0.65, opacity: 0, zIndex: 0 };
+/** Shortest signed distance around the ring (so left slots wrap correctly). */
+function circularOffset(i: number, active: number, count: number): number {
+  if (count <= 1) return i === active ? 0 : 99;
+  let d = i - active;
+  while (d > count / 2) d -= count;
+  while (d < -count / 2) d += count;
+  return d;
+}
+
+function cardMetrics(offset: number) {
+  const abs = Math.abs(offset);
+  if (abs > 2) {
+    return { scale: 0.62, opacity: 0, zIndex: 0, visible: false };
+  }
+  const scale = abs === 0 ? 1 : abs === 1 ? 0.82 : 0.7;
+  return { scale, opacity: 1, zIndex: 40 - abs * 10, visible: true };
 }
 
 type Props = {
@@ -31,26 +41,27 @@ export function GalleryCoverflow({
   accentColor,
   onOpenFullscreen,
 }: Props) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const [viewportW, setViewportW] = useState(0);
+  const reduced = useReducedMotion() ?? false;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = images.length;
+  const touchStartX = useRef<number | null>(null);
+
+  const goTo = useCallback(
+    (i: number) => {
+      if (count <= 1) return;
+      setIndex(((i % count) + count) % count);
+    },
+    [count],
+  );
 
   useEffect(() => {
-    const el = viewportRef.current;
-    if (!el) return;
-    const measure = () => setViewportW(el.clientWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const trackX =
-    viewportW > 0 ? viewportW / 2 - index * STEP - SLIDE_W / 2 : 0;
-
-  const touchStartX = useRef<number | null>(null);
+    if (reduced || paused || count <= 1) return;
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % count);
+    }, AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [reduced, paused, count]);
 
   const onTouchStartTrack = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]?.clientX ?? null;
@@ -67,26 +78,14 @@ export function GalleryCoverflow({
     else if (dx > 36) goTo(index - 1);
   };
 
-  const goTo = useCallback(
-    (i: number) => {
-      if (count <= 1) return;
-      setIndex(((i % count) + count) % count);
-    },
-    [count],
-  );
-
-  useEffect(() => {
-    if (paused || count <= 1) return;
-    const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % count);
-    }, AUTO_MS);
-    return () => window.clearInterval(id);
-  }, [paused, count]);
-
   if (count === 0) return null;
 
+  const transition = reduced
+    ? { duration: 0 }
+    : { duration: SLIDE_MS, ease: SLIDE_EASE };
+
   return (
-    <div className="mx-auto w-full max-w-md select-none px-3 py-4">
+    <div className="mx-auto w-full max-w-md select-none px-2 py-4">
       <div
         className="relative"
         onMouseEnter={() => setPaused(true)}
@@ -100,83 +99,78 @@ export function GalleryCoverflow({
           aria-hidden
         />
 
-        <div
-          ref={viewportRef}
-          className="relative h-[280px] overflow-hidden sm:h-[300px]"
-          style={{ opacity: viewportW > 0 ? 1 : 0 }}
-        >
-          <motion.div
-            className="absolute top-1/2 flex -translate-y-1/2 items-center will-change-transform"
-            animate={{ x: trackX }}
-            transition={{ duration: SLIDE_MS, ease: SLIDE_EASE }}
-          >
-            {images.map((src, i) => {
-              const distance = Math.abs(i - index);
-              const style = stackStyle(distance);
-              const isCenter = distance === 0;
+        {/* Full-width stage — side cards must not clip */}
+        <div className="relative mx-auto h-[280px] w-full overflow-visible sm:h-[320px]">
+          {images.map((src, i) => {
+            const offset = circularOffset(i, index, count);
+            const { scale, opacity, zIndex, visible } = cardMetrics(offset);
+            const isCenter = offset === 0;
+            const x = offset * X_STEP;
 
-              return (
-                <button
-                  key={`${src}-${i}`}
-                  type="button"
+            return (
+              <motion.button
+                key={`${src}-${i}`}
+                type="button"
+                className={cn(
+                  "absolute left-1/2 top-1/2 w-[60%] max-w-[260px]",
+                  visible ? "" : "pointer-events-none",
+                  isCenter ? "cursor-zoom-in" : "cursor-pointer",
+                )}
+                style={{ aspectRatio: "4 / 5", zIndex }}
+                animate={{
+                  x: `calc(-50% + ${x}px)`,
+                  y: "-50%",
+                  scale,
+                  opacity,
+                }}
+                transition={transition}
+                onClick={() => {
+                  if (!visible) return;
+                  if (isCenter) onOpenFullscreen(i);
+                  else goTo(i);
+                }}
+                aria-hidden={!visible}
+                aria-label={
+                  isCenter
+                    ? `Open photo ${i + 1}`
+                    : `Show photo ${i + 1}`
+                }
+              >
+                <div
                   className={cn(
-                    "relative shrink-0",
-                    distance > 2 && "pointer-events-none",
-                  )}
-                  style={{
-                    width: SLIDE_W,
-                    marginRight: GAP,
-                    zIndex: style.zIndex,
-                  }}
-                  onClick={() =>
-                    isCenter ? onOpenFullscreen(i) : goTo(i)
-                  }
-                  aria-label={
+                    "relative h-full w-full overflow-hidden rounded-3xl",
+                    CARD_RING,
                     isCenter
-                      ? `Open photo ${i + 1}`
-                      : `Show photo ${i + 1}`
+                      ? "shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85)]"
+                      : "shadow-[0_18px_40px_-15px_rgba(0,0,0,0.55)]",
+                  )}
+                  style={
+                    isCenter
+                      ? {
+                          boxShadow: `0 0 0 1px ${accentColor}66, 0 30px 60px -20px rgba(0,0,0,0.85)`,
+                        }
+                      : undefined
                   }
                 >
-                  <motion.div
-                    className={cn(
-                      "relative aspect-[4/5] overflow-hidden rounded-3xl",
-                      isCenter
-                        ? "cursor-zoom-in shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85)] ring-2"
-                        : "cursor-pointer shadow-[0_16px_32px_-14px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.14]",
-                    )}
-                    style={
-                      isCenter
-                        ? {
-                            boxShadow: `0 0 0 1px ${accentColor}55, 0 30px 60px -20px rgba(0,0,0,0.85)`,
-                          }
-                        : undefined
-                    }
-                    animate={{
-                      scale: style.scale,
-                      opacity: style.opacity,
-                    }}
-                    transition={{ duration: SLIDE_MS, ease: SLIDE_EASE }}
-                  >
-                    <Image
-                      src={src}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="220px"
-                      unoptimized
-                      draggable={false}
-                    />
-                    {!isCenter ? (
-                      <>
-                        <div className="absolute inset-0 bg-black/45" />
-                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
-                      </>
-                    ) : null}
-                  </motion.div>
-                </button>
-              );
-            })}
-          </motion.div>
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 448px) 60vw, 260px"
+                    unoptimized
+                    draggable={false}
+                  />
+                  {!isCenter ? (
+                    <>
+                      <div className="absolute inset-0 bg-black/45" />
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
+                    </>
+                  ) : null}
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 

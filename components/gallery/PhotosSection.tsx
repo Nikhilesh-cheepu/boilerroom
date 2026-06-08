@@ -106,7 +106,7 @@ export function PhotosSection({
 
   return (
     <>
-      <section className="px-1 py-2">
+      <section className="overflow-visible px-0 py-2">
         {loading ? (
           <CoverflowSkeleton />
         ) : images.length === 0 ? (

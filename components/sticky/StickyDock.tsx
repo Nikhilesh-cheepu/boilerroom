@@ -66,7 +66,7 @@ export function StickyDock({
           <div className="pointer-events-auto mb-2 rounded-full border border-emerald-400/25 bg-emerald-950/50 px-3 py-1.5 shadow-sm backdrop-blur-md">
             <motion.p
               key={`${promoIndex}-${lines[promoIndex]}`}
-              initial={reduceMotion ? false : { opacity: 0, y: 3 }}
+              initial={false}
               animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="text-center text-[11px] font-semibold leading-tight tracking-wide text-emerald-100 sm:text-xs"
@@ -80,7 +80,7 @@ export function StickyDock({
           className={cn(
             "pointer-events-auto flex w-full max-w-[28rem] items-stretch gap-1 rounded-2xl border border-white/[0.1] bg-gradient-to-b from-zinc-900/85 to-[#050508]/92 p-1.5 shadow-[0_-12px_40px_-14px_rgba(0,0,0,0.75)] backdrop-blur-xl sm:gap-1.5 sm:p-2",
           )}
-          initial={reduceMotion ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }}
+          initial={false}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 340, damping: 32 }}
         >
