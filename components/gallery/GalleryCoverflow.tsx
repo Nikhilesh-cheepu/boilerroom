@@ -5,14 +5,33 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
 const AUTO_MS = 3800;
-const X_STEP = 68;
+/** Center + 4 background cards (±2 each side). */
 const VISIBLE_OFFSETS = [-2, -1, 0, 1, 2] as const;
+
+function useTouchStep() {
+  const [step, setStep] = useState(56);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
+    const update = () => setStep(mq.matches ? 52 : 56);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return step;
+}
 
 function cardMetrics(offset: number) {
   const abs = Math.abs(offset);
-  const scale = abs === 0 ? 1 : abs === 1 ? 0.86 : 0.74;
-  const opacity = abs === 0 ? 1 : abs === 1 ? 0.72 : 0.5;
-  return { scale, opacity };
+  const scale = abs === 0 ? 1 : abs === 1 ? 0.82 : 0.7;
+  return { scale };
+}
+
+function slotVisible(offset: number, count: number): boolean {
+  if (offset === 0) return true;
+  if (count <= 1) return false;
+  if (count === 2) return Math.abs(offset) === 1;
+  if (count === 3) return Math.abs(offset) <= 1;
+  return true;
 }
 
 type Props = {
@@ -27,6 +46,7 @@ export function GalleryCoverflow({
   onOpenFullscreen,
 }: Props) {
   const reduced = useReducedMotion() ?? false;
+  const xStep = useTouchStep();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = images.length;
@@ -54,36 +74,35 @@ export function GalleryCoverflow({
     : { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const };
 
   return (
-    <div className="mx-auto w-full max-w-md overflow-visible px-3 py-4">
+    <div className="mx-auto w-full max-w-md px-2 py-4">
       <div
-        className="relative overflow-visible"
+        className="relative"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
       >
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[68%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[68%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
           style={{ backgroundColor: `${accentColor}24` }}
           aria-hidden
         />
 
-        {/* Tall enough for 4:5 center card — overflow visible so edges never clip */}
-        <div className="relative mx-auto h-[300px] w-full max-w-[280px] overflow-visible sm:h-[325px]">
+        <div className="relative mx-auto h-[280px] w-full sm:h-[320px]">
           {VISIBLE_OFFSETS.map((offset) => {
-            if (count < 3 && Math.abs(offset) === 2) return null;
-            if (count < 2 && offset !== 0) return null;
+            if (!slotVisible(offset, count)) return null;
 
             const imgIndex = (index + offset + count) % count;
-            const { scale, opacity } = cardMetrics(offset);
+            const { scale } = cardMetrics(offset);
             const isCenter = offset === 0;
-            const zIndex = 30 - Math.abs(offset) * 10;
+            const zIndex = 40 - Math.abs(offset) * 10;
+            const x = offset * xStep;
 
             return (
               <motion.button
                 key={`slot-${offset}`}
                 type="button"
-                className={`absolute left-1/2 top-1/2 w-[58%] max-w-[240px] ${
+                className={`absolute left-1/2 top-1/2 w-[60%] max-w-[260px] ${
                   isCenter ? "cursor-zoom-in" : "cursor-pointer"
                 }`}
                 style={{
@@ -91,10 +110,9 @@ export function GalleryCoverflow({
                   zIndex,
                 }}
                 animate={{
-                  x: `calc(-50% + ${offset * X_STEP}px)`,
+                  x: `calc(-50% + ${x}px)`,
                   y: "-50%",
                   scale,
-                  opacity,
                 }}
                 transition={slideTransition}
                 onClick={() => {
@@ -110,8 +128,8 @@ export function GalleryCoverflow({
                 <div
                   className={`relative h-full w-full overflow-hidden rounded-3xl ring-1 ring-white/[0.14] ${
                     isCenter
-                      ? "shadow-[0_28px_56px_-18px_rgba(0,0,0,0.8)]"
-                      : "shadow-[0_16px_36px_-14px_rgba(0,0,0,0.55)]"
+                      ? "shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85)]"
+                      : "shadow-[0_18px_40px_-15px_rgba(0,0,0,0.55)]"
                   }`}
                 >
                   <Image
@@ -119,14 +137,14 @@ export function GalleryCoverflow({
                     alt=""
                     fill
                     className="object-cover"
-                    sizes="(max-width: 448px) 58vw, 240px"
+                    sizes="(max-width: 448px) 60vw, 260px"
                     unoptimized
                     draggable={false}
                   />
                   {!isCenter ? (
                     <>
-                      <div className="absolute inset-0 bg-[#070b12]/50" />
-                      <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/50 to-transparent" />
+                      <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
                     </>
                   ) : null}
                 </div>
@@ -137,7 +155,7 @@ export function GalleryCoverflow({
       </div>
 
       {count > 1 ? (
-        <div className="mt-4 flex justify-center gap-1.5 px-2">
+        <div className="mt-3 flex justify-center gap-1.5 px-2">
           {images.map((_, i) => (
             <button
               key={i}
