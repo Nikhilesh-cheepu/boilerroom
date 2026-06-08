@@ -17,10 +17,16 @@ type Props = {
 
 function CoverflowSkeleton() {
   return (
-    <div className="relative mx-auto h-[280px] w-full max-w-md overflow-hidden sm:h-[320px]">
-      <div className="absolute left-1/2 top-1/2 w-[48%] max-w-[210px] -translate-x-[130%] -translate-y-1/2 animate-pulse rounded-3xl bg-white/[0.04] ring-1 ring-white/[0.08]" style={{ aspectRatio: "4 / 5" }} />
-      <div className="absolute left-1/2 top-1/2 w-[60%] max-w-[260px] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-3xl bg-white/[0.07] ring-1 ring-white/[0.1]" style={{ aspectRatio: "4 / 5" }} />
-      <div className="absolute left-1/2 top-1/2 w-[48%] max-w-[210px] -translate-x-[30%] -translate-y-1/2 animate-pulse rounded-3xl bg-white/[0.04] ring-1 ring-white/[0.08]" style={{ aspectRatio: "4 / 5" }} />
+    <div className="mx-auto w-full max-w-md px-4 py-3">
+      <div
+        className="mx-auto w-full max-w-[260px] animate-pulse rounded-3xl bg-white/[0.06] ring-1 ring-white/[0.1]"
+        style={{ aspectRatio: "4 / 5" }}
+      />
+      <div className="mt-4 flex justify-center gap-1.5">
+        <div className="h-1.5 w-[22px] rounded-full bg-white/20" />
+        <div className="h-1.5 w-1.5 rounded-full bg-white/10" />
+        <div className="h-1.5 w-1.5 rounded-full bg-white/10" />
+      </div>
     </div>
   );
 }
