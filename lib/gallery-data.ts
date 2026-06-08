@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { toBlobProxyUrl } from "@/lib/blob/proxy-url";
 import { markGalleryTablePresent } from "@/lib/gallery-db";
 import { prisma } from "@/lib/prisma";
 
@@ -8,6 +9,10 @@ export type GalleryImageDTO = {
   alt: string | null;
   sortOrder: number;
 };
+
+function mapGalleryRow(row: GalleryImageDTO): GalleryImageDTO {
+  return { ...row, url: toBlobProxyUrl(row.url) };
+}
 
 /** Avoid `findMany` when the table is missing (no noisy Prisma errors in logs). */
 let galleryTableExists: boolean | null = null;
@@ -37,10 +42,11 @@ async function isGalleryTablePresent(): Promise<boolean> {
 export async function getGalleryPreview(limit = 14): Promise<GalleryImageDTO[]> {
   if (!(await isGalleryTablePresent())) return [];
   try {
-    return await prisma.galleryImage.findMany({
+    const rows = await prisma.galleryImage.findMany({
       orderBy: { sortOrder: "asc" },
       take: limit,
     });
+    return rows.map(mapGalleryRow);
   } catch {
     return [];
   }
@@ -49,9 +55,10 @@ export async function getGalleryPreview(limit = 14): Promise<GalleryImageDTO[]> 
 export async function getGalleryAll(): Promise<GalleryImageDTO[]> {
   if (!(await isGalleryTablePresent())) return [];
   try {
-    return await prisma.galleryImage.findMany({
+    const rows = await prisma.galleryImage.findMany({
       orderBy: { sortOrder: "asc" },
     });
+    return rows.map(mapGalleryRow);
   } catch {
     return [];
   }

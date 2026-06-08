@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { toBlobProxyUrl } from "@/lib/blob/proxy-url";
 import { prisma } from "@/lib/prisma";
 import {
   drinksMenu,
@@ -30,12 +31,7 @@ const FALLBACK_MENUS: HomeMenus = {
 
 function resolveHeroVideoSrc(path: string | null): string | null {
   if (!path) return null;
-  if (!path.startsWith("http")) return path;
-  // Proxy Vercel Blob URLs through our API so private stores still render on homepage.
-  if (path.includes("blob.vercel-storage.com")) {
-    return `/api/hero-video?src=${encodeURIComponent(path)}`;
-  }
-  return path;
+  return toBlobProxyUrl(path);
 }
 
 function mapCategory(c: {

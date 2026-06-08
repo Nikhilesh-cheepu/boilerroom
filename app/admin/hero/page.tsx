@@ -1,14 +1,7 @@
 import { clearHeroVideoAction } from "@/app/actions/cms";
 import { HeroVideoUploader } from "@/components/admin/hero-video/HeroVideoUploader";
+import { toBlobProxyUrl } from "@/lib/blob/proxy-url";
 import { prisma } from "@/lib/prisma";
-
-function toPreviewSrc(path: string): string {
-  if (!path.startsWith("http")) return path;
-  if (path.includes("blob.vercel-storage.com")) {
-    return `/api/hero-video?src=${encodeURIComponent(path)}`;
-  }
-  return path;
-}
 
 export default async function AdminHeroPage() {
   const s = await prisma.siteSettings.findUnique({ where: { id: 1 } });
@@ -30,7 +23,7 @@ export default async function AdminHeroPage() {
           <div className="mb-6 flex items-center gap-4 rounded-xl border border-white/10 bg-black/30 p-4">
             <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black/50">
               <video
-                src={toPreviewSrc(s.heroVideoPath)}
+                src={toBlobProxyUrl(s.heroVideoPath)}
                 className="h-full w-full object-cover"
                 muted
                 playsInline
