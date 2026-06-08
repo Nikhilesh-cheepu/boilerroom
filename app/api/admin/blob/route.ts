@@ -17,25 +17,19 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const body = (await request.json()) as HandleUploadBody & { pathname?: string };
-    const pathname = String(body.pathname ?? "");
-
-    const isAllowedPath = ALLOWED_PREFIXES.some((prefix) =>
-      pathname.startsWith(prefix),
-    );
-    if (!isAllowedPath) {
-      return NextResponse.json(
-        { error: "Invalid upload path. Use gallery/ or hero/." },
-        { status: 400 },
-      );
-    }
-
+    const body = (await request.json()) as HandleUploadBody;
     const json = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async () => {
+      onBeforeGenerateToken: async (pathname) => {
         if (!(await isAdminSession())) {
           throw new Error("Not signed in.");
+        }
+        const isAllowedPath = ALLOWED_PREFIXES.some((prefix) =>
+          pathname.startsWith(prefix),
+        );
+        if (!isAllowedPath) {
+          throw new Error("Invalid upload path. Use gallery/ or hero/.");
         }
         return {
           allowedContentTypes: [
@@ -47,9 +41,6 @@ export async function POST(request: Request): Promise<NextResponse> {
           maximumSizeInBytes: 20 * 1024 * 1024,
           addRandomSuffix: true,
         };
-      },
-      onUploadCompleted: async ({ blob }) => {
-        void blob;
       },
     });
 

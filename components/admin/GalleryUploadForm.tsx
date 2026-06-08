@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { addGalleryImageFromUpload } from "@/app/actions/cms";
 import { compressImageToMaxBytes } from "@/lib/compress-image";
+import { isPrivateStorePublicAccessError } from "@/lib/blob/private-store-error";
 
 type UploadState = "idle" | "uploading" | "done" | "error";
 
@@ -39,14 +40,17 @@ export function GalleryUploadForm() {
             : rawFile;
 
         setStatus(`Uploading ${rawFile.name}...`);
-        const blob = await upload(
-          `gallery/${Date.now()}-${rawFile.name.replace(/\s+/g, "-").toLowerCase()}`,
-          file,
-          {
-            access: "public",
-            handleUploadUrl: "/api/admin/blob",
-          },
-        );
+        const pathname = `gallery/${Date.now()}-${rawFile.name.replace(/\s+/g, "-").toLowerCase()}`;
+        const uploadOpts = {
+          handleUploadUrl: "/api/admin/blob",
+        } as const;
+        let blob;
+        try {
+          blob = await upload(pathname, file, { ...uploadOpts, access: "public" });
+        } catch (e) {
+          if (!isPrivateStorePublicAccessError(e)) throw e;
+          blob = await upload(pathname, file, { ...uploadOpts, access: "private" });
+        }
         await addGalleryImageFromUpload(blob.url, fileAlt(rawFile.name));
         done += 1;
         setProgress(Math.round((done / files.length) * 100));
