@@ -1,16 +1,45 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { addGalleryImageFromUpload } from "@/app/actions/cms";
 import { compressImageToMaxBytes } from "@/lib/compress-image";
-import { isPrivateStorePublicAccessError } from "@/lib/blob/private-store-error";
 
 type UploadState = "idle" | "uploading" | "done" | "error";
 
+/** Vercel serverless body limit is ~4.5MB — compress larger images before same-origin upload. */
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
 function fileAlt(name: string): string {
   return name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+}
+
+function postFormDataWithProgress(
+  url: string,
+  formData: FormData,
+  onProgress: (pct: number) => void,
+): Promise<{ ok: boolean; status: number; bodyText: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.withCredentials = true;
+    xhr.responseType = "text";
+    xhr.upload.onprogress = (ev) => {
+      if (ev.lengthComputable && ev.total > 0) {
+        onProgress(Math.min(99, Math.round((ev.loaded / ev.total) * 100)));
+      }
+    };
+    xhr.onload = () => {
+      resolve({
+        ok: xhr.status >= 200 && xhr.status < 300,
+        status: xhr.status,
+        bodyText: xhr.responseText ?? "",
+      });
+    };
+    xhr.onerror = () => reject(new TypeError("Network request failed"));
+    xhr.onabort = () => reject(new DOMException("Aborted", "AbortError"));
+    xhr.send(formData);
+  });
 }
 
 export function GalleryUploadForm() {
@@ -35,23 +64,30 @@ export function GalleryUploadForm() {
         }
         setStatus(`Preparing ${rawFile.name}...`);
         const file =
-          rawFile.size > 5 * 1024 * 1024
-            ? await compressImageToMaxBytes(rawFile)
+          rawFile.size > MAX_UPLOAD_BYTES
+            ? await compressImageToMaxBytes(rawFile, MAX_UPLOAD_BYTES)
             : rawFile;
 
         setStatus(`Uploading ${rawFile.name}...`);
-        const pathname = `gallery/${Date.now()}-${rawFile.name.replace(/\s+/g, "-").toLowerCase()}`;
-        const uploadOpts = {
-          handleUploadUrl: "/api/admin/blob",
-        } as const;
-        let blob;
-        try {
-          blob = await upload(pathname, file, { ...uploadOpts, access: "public" });
-        } catch (e) {
-          if (!isPrivateStorePublicAccessError(e)) throw e;
-          blob = await upload(pathname, file, { ...uploadOpts, access: "private" });
+        const fd = new FormData();
+        fd.set("file", file);
+        const res = await postFormDataWithProgress(
+          "/api/admin/gallery/body",
+          fd,
+          (pct) => setProgress(Math.round(((done + pct / 100) / files.length) * 100)),
+        );
+        let data: { error?: string; url?: string } = {};
+        if (res.bodyText.trim()) {
+          try {
+            data = JSON.parse(res.bodyText) as typeof data;
+          } catch {
+            /* ignore */
+          }
         }
-        await addGalleryImageFromUpload(blob.url, fileAlt(rawFile.name));
+        if (!res.ok || !data.url) {
+          throw new Error(data.error ?? `Upload failed (${res.status}).`);
+        }
+        await addGalleryImageFromUpload(data.url, fileAlt(rawFile.name));
         done += 1;
         setProgress(Math.round((done / files.length) * 100));
       }
