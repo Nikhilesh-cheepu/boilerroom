@@ -15,27 +15,17 @@ type Props = {
 };
 
 function CoverflowSkeleton() {
-  const slots = [
-    { x: -112, scale: 0.7, z: 20 },
-    { x: -56, scale: 0.82, z: 30 },
-    { x: 0, scale: 1, z: 40 },
-    { x: 56, scale: 0.82, z: 30 },
-    { x: 112, scale: 0.7, z: 20 },
-  ];
   return (
     <div className="mx-auto w-full max-w-md px-2 py-4">
-      <div className="relative mx-auto h-[280px] w-full sm:h-[320px]">
-        {slots.map((slot, i) => (
-          <div
-            key={i}
-            className="absolute left-1/2 top-1/2 w-[60%] max-w-[260px] animate-pulse rounded-3xl bg-white/[0.06] ring-1 ring-white/[0.1]"
-            style={{
-              aspectRatio: "4 / 5",
-              zIndex: slot.z,
-              transform: `translate(calc(-50% + ${slot.x}px), -50%) scale(${slot.scale})`,
-            }}
-          />
-        ))}
+      <div className="flex gap-3 overflow-hidden py-3" style={{ paddingInline: "14%" }}>
+        <div
+          className="w-[72%] max-w-[260px] shrink-0 animate-pulse rounded-3xl bg-white/[0.06] ring-1 ring-white/[0.1]"
+          style={{ aspectRatio: "4 / 5" }}
+        />
+        <div
+          className="w-[72%] max-w-[260px] shrink-0 animate-pulse rounded-3xl bg-white/[0.04] ring-1 ring-white/[0.08]"
+          style={{ aspectRatio: "4 / 5" }}
+        />
       </div>
       <div className="mt-3 flex justify-center gap-1.5">
         <div className="h-1.5 w-[22px] rounded-full bg-white/20" />

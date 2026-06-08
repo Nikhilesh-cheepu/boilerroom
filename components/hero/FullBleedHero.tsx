@@ -86,13 +86,12 @@ export function FullBleedHero({ videoSrc }: Props) {
           "relative h-[100dvh] w-full overflow-hidden",
           !reduceMotion && "br-animate-frame-glow",
         )}
-        initial={
+        initial={false}
+        animate={
           reduceMotion
             ? { opacity: 1, y: 0, scale: 1 }
-            : { opacity: 0.75, y: 22, scale: 0.98 }
+            : { opacity: 1, y: 0, scale: 1 }
         }
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 280, damping: 32, mass: 0.9 }}
       >
         <div
           className="pointer-events-none absolute -left-10 top-1/4 z-[5] h-36 w-36 rounded-full bg-[#9cb4ff24] blur-3xl br-animate-orb-a"

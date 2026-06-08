@@ -1,38 +1,10 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const AUTO_MS = 3800;
-/** Center + 4 background cards (±2 each side). */
-const VISIBLE_OFFSETS = [-2, -1, 0, 1, 2] as const;
-
-function useTouchStep() {
-  const [step, setStep] = useState(56);
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
-    const update = () => setStep(mq.matches ? 52 : 56);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return step;
-}
-
-function cardMetrics(offset: number) {
-  const abs = Math.abs(offset);
-  const scale = abs === 0 ? 1 : abs === 1 ? 0.82 : 0.7;
-  return { scale };
-}
-
-function slotVisible(offset: number, count: number): boolean {
-  if (offset === 0) return true;
-  if (count <= 1) return false;
-  if (count === 2) return Math.abs(offset) === 1;
-  if (count === 3) return Math.abs(offset) <= 1;
-  return true;
-}
 
 type Props = {
   images: string[];
@@ -45,33 +17,67 @@ export function GalleryCoverflow({
   accentColor,
   onOpenFullscreen,
 }: Props) {
-  const reduced = useReducedMotion() ?? false;
-  const xStep = useTouchStep();
+  const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const programmaticScroll = useRef(false);
   const count = images.length;
 
-  const goTo = useCallback(
-    (i: number) => {
-      if (count <= 1) return;
-      setIndex(((i % count) + count) % count);
-    },
-    [count],
-  );
+  const scrollToIndex = useCallback((i: number, smooth = true) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const slide = track.children[i] as HTMLElement | undefined;
+    if (!slide) return;
+    programmaticScroll.current = true;
+    slide.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+      inline: "center",
+      block: "nearest",
+    });
+    setIndex(i);
+    window.setTimeout(() => {
+      programmaticScroll.current = false;
+    }, smooth ? 520 : 0);
+  }, []);
 
   useEffect(() => {
-    if (reduced || paused || count <= 1) return;
-    const t = window.setInterval(() => {
-      setIndex((i) => (i + 1) % count);
+    if (paused || count <= 1) return;
+    const id = window.setInterval(() => {
+      setIndex((prev) => {
+        const next = (prev + 1) % count;
+        scrollToIndex(next, true);
+        return next;
+      });
     }, AUTO_MS);
-    return () => window.clearInterval(t);
-  }, [reduced, paused, count]);
+    return () => window.clearInterval(id);
+  }, [paused, count, scrollToIndex]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const onScroll = () => {
+      if (programmaticScroll.current) return;
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let closest = 0;
+      let minDist = Infinity;
+      Array.from(track.children).forEach((child, i) => {
+        const el = child as HTMLElement;
+        const childCenter = el.offsetLeft + el.offsetWidth / 2;
+        const dist = Math.abs(center - childCenter);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = i;
+        }
+      });
+      setIndex(closest);
+    };
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, [count]);
 
   if (count === 0) return null;
-
-  const slideTransition = reduced
-    ? { duration: 0 }
-    : { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const };
 
   return (
     <div className="mx-auto w-full max-w-md px-2 py-4">
@@ -88,80 +94,62 @@ export function GalleryCoverflow({
           aria-hidden
         />
 
-        <div className="relative mx-auto h-[280px] w-full sm:h-[320px]">
-          {VISIBLE_OFFSETS.map((offset) => {
-            if (!slotVisible(offset, count)) return null;
-
-            const imgIndex = (index + offset + count) % count;
-            const { scale } = cardMetrics(offset);
-            const isCenter = offset === 0;
-            const zIndex = 40 - Math.abs(offset) * 10;
-            const x = offset * xStep;
-
+        <div
+          ref={trackRef}
+          className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          style={{ paddingInline: "14%" }}
+        >
+          {images.map((src, i) => {
+            const active = i === index;
             return (
-              <motion.button
-                key={`slot-${offset}`}
+              <button
+                key={`${src}-${i}`}
                 type="button"
-                className={`absolute left-1/2 top-1/2 w-[60%] max-w-[260px] ${
-                  isCenter ? "cursor-zoom-in" : "cursor-pointer"
-                }`}
-                style={{
-                  aspectRatio: "4 / 5",
-                  zIndex,
-                }}
-                animate={{
-                  x: `calc(-50% + ${x}px)`,
-                  y: "-50%",
-                  scale,
-                }}
-                transition={slideTransition}
-                onClick={() => {
-                  if (isCenter) onOpenFullscreen(index);
-                  else goTo(index + offset);
-                }}
-                aria-label={
-                  isCenter
-                    ? `Open photo ${index + 1}`
-                    : `Show photo ${imgIndex + 1}`
-                }
+                className="w-[72%] max-w-[260px] shrink-0 snap-center"
+                onClick={() => onOpenFullscreen(i)}
+                aria-label={`Gallery photo ${i + 1}`}
               >
                 <div
-                  className={`relative h-full w-full overflow-hidden rounded-3xl ring-1 ring-white/[0.14] ${
-                    isCenter
-                      ? "shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85)]"
-                      : "shadow-[0_18px_40px_-15px_rgba(0,0,0,0.55)]"
-                  }`}
+                  className={cn(
+                    "relative aspect-[4/5] overflow-hidden rounded-3xl ring-1 ring-white/[0.14] transition-all duration-500 ease-out",
+                    active
+                      ? "scale-100 opacity-100 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.85)]"
+                      : "scale-[0.86] opacity-60 shadow-[0_18px_40px_-15px_rgba(0,0,0,0.5)]",
+                  )}
                 >
                   <Image
-                    src={images[imgIndex]}
+                    src={src}
                     alt=""
                     fill
                     className="object-cover"
-                    sizes="(max-width: 448px) 60vw, 260px"
+                    sizes="(max-width: 448px) 72vw, 260px"
                     unoptimized
                     draggable={false}
                   />
-                  {!isCenter ? (
-                    <>
-                      <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />
-                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
-                    </>
+                  {!active ? (
+                    <div className="absolute inset-0 bg-black/40" aria-hidden />
                   ) : null}
                 </div>
-              </motion.button>
+              </button>
             );
           })}
         </div>
       </div>
 
       {count > 1 ? (
-        <div className="mt-3 flex justify-center gap-1.5 px-2">
+        <div
+          className="mt-3 flex justify-center gap-1.5 px-2"
+          role="tablist"
+          aria-label="Gallery slides"
+        >
           {images.map((_, i) => (
             <button
               key={i}
               type="button"
+              role="tab"
+              aria-selected={i === index}
               aria-label={`Go to photo ${i + 1}`}
-              onClick={() => goTo(i)}
+              onClick={() => scrollToIndex(i, true)}
               className="h-1.5 rounded-full transition-all duration-300"
               style={{
                 width: i === index ? 22 : 6,
