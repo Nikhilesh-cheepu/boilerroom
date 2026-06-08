@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
 import { GalleryCoverflow } from "./GalleryCoverflow";
@@ -17,11 +16,21 @@ type Props = {
 
 function CoverflowSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-3">
-      <div
-        className="mx-auto w-full max-w-[260px] animate-pulse rounded-3xl bg-white/[0.06] ring-1 ring-white/[0.1]"
-        style={{ aspectRatio: "4 / 5" }}
-      />
+    <div className="mx-auto w-full max-w-md overflow-visible px-3 py-4">
+      <div className="relative mx-auto h-[300px] w-full max-w-[280px] sm:h-[325px]">
+        <div
+          className="absolute left-1/2 top-1/2 w-[48%] max-w-[200px] -translate-x-[calc(50%+52px)] -translate-y-1/2 animate-pulse rounded-3xl bg-white/[0.04] ring-1 ring-white/[0.08]"
+          style={{ aspectRatio: "4 / 5" }}
+        />
+        <div
+          className="absolute left-1/2 top-1/2 w-[58%] max-w-[240px] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-3xl bg-white/[0.07] ring-1 ring-white/[0.1]"
+          style={{ aspectRatio: "4 / 5" }}
+        />
+        <div
+          className="absolute left-1/2 top-1/2 w-[48%] max-w-[200px] -translate-x-[calc(50%-52px)] -translate-y-1/2 animate-pulse rounded-3xl bg-white/[0.04] ring-1 ring-white/[0.08]"
+          style={{ aspectRatio: "4 / 5" }}
+        />
+      </div>
       <div className="mt-4 flex justify-center gap-1.5">
         <div className="h-1.5 w-[22px] rounded-full bg-white/20" />
         <div className="h-1.5 w-1.5 rounded-full bg-white/10" />
@@ -91,7 +100,6 @@ export function PhotosSection({
   instagramUrl,
   whatsappHref,
 }: Props) {
-  const reduced = useReducedMotion() ?? false;
   const [modalOpen, setModalOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
 
@@ -102,17 +110,7 @@ export function PhotosSection({
 
   return (
     <>
-      <motion.section
-        className="px-1 py-2"
-        initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-5% 0px" }}
-        transition={{
-          delay: reduced ? 0 : 0.2,
-          duration: reduced ? 0 : 0.5,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-      >
+      <section className="px-1 py-2">
         {loading ? (
           <CoverflowSkeleton />
         ) : images.length === 0 ? (
@@ -128,7 +126,7 @@ export function PhotosSection({
             onOpenFullscreen={openGallery}
           />
         )}
-      </motion.section>
+      </section>
 
       {modalOpen && images.length > 0 ? (
         <GalleryModal
