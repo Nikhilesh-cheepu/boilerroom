@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { markGalleryTablePresent } from "@/lib/gallery-db";
 import { prisma } from "@/lib/prisma";
 
 export type GalleryImageDTO = {
@@ -25,6 +26,7 @@ async function isGalleryTablePresent(): Promise<boolean> {
       `,
     );
     galleryTableExists = Boolean(rows[0]?.exists);
+    if (galleryTableExists) markGalleryTablePresent();
     return galleryTableExists;
   } catch {
     galleryTableExists = false;

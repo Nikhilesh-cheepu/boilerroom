@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { addGalleryImageFromUpload } from "@/app/actions/cms";
 import { compressImageToMaxBytes } from "@/lib/compress-image";
 
 type UploadState = "idle" | "uploading" | "done" | "error";
@@ -71,6 +70,7 @@ export function GalleryUploadForm() {
         setStatus(`Uploading ${rawFile.name}...`);
         const fd = new FormData();
         fd.set("file", file);
+        fd.set("alt", fileAlt(rawFile.name));
         const res = await postFormDataWithProgress(
           "/api/admin/gallery/body",
           fd,
@@ -87,7 +87,6 @@ export function GalleryUploadForm() {
         if (!res.ok || !data.url) {
           throw new Error(data.error ?? `Upload failed (${res.status}).`);
         }
-        await addGalleryImageFromUpload(data.url, fileAlt(rawFile.name));
         done += 1;
         setProgress(Math.round((done / files.length) * 100));
       }

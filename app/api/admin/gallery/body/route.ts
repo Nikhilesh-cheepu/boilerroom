@@ -1,6 +1,8 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/auth/admin-server";
 import { isBlobConfigured, putBlobRespectingStoreAccess } from "@/lib/blob/hero";
+import { addGalleryImageRecord } from "@/lib/gallery-db";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -18,6 +20,17 @@ const MAX_GALLERY_IMAGE_BYTES = 4 * 1024 * 1024;
 function buildGalleryPathname(filename: string): string {
   const safe = filename.replace(/\s+/g, "-").toLowerCase();
   return `gallery/${Date.now()}-${safe}`;
+}
+
+function resolveImageContentType(file: File): string | null {
+  const direct = file.type || "";
+  if (GALLERY_IMAGE_MIME_TYPES.has(direct)) return direct;
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  if (ext === "gif") return "image/gif";
+  return null;
 }
 
 /**
@@ -54,21 +67,26 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  const contentType = file.type || "application/octet-stream";
-  if (!GALLERY_IMAGE_MIME_TYPES.has(contentType)) {
+  const contentType = resolveImageContentType(file);
+  if (!contentType) {
     return NextResponse.json(
       { error: "Unsupported format. Use JPG, PNG, WebP, or GIF." },
       { status: 400 },
     );
   }
 
+  const alt = String(formData.get("alt") ?? "").trim() || null;
   const pathname = buildGalleryPathname(file.name);
 
   try {
     const blob = await putBlobRespectingStoreAccess(pathname, file, {
       addRandomSuffix: true,
-      contentType: contentType || undefined,
+      contentType,
     });
+    await addGalleryImageRecord(blob.url, alt);
+    revalidatePath("/");
+    revalidatePath("/gallery");
+    revalidatePath("/admin/gallery");
     return NextResponse.json({ ok: true, url: blob.url });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Upload failed";

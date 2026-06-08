@@ -5,6 +5,7 @@ import path from "path";
 import { revalidatePath } from "next/cache";
 import { deleteBlobUrlIfApplicable } from "@/lib/blob/hero";
 import { isAdminSession } from "@/lib/auth/admin-server";
+import { addGalleryImageRecord, ensureGalleryTable } from "@/lib/gallery-db";
 import { normalizeIndianPhoneDigits } from "@/lib/phone-in";
 import { prisma } from "@/lib/prisma";
 
@@ -294,18 +295,7 @@ export async function addGalleryImageFromUpload(
   alt?: string,
 ): Promise<void> {
   await guard();
-  const safeUrl = url.trim();
-  if (!safeUrl) return;
-  const last = await prisma.galleryImage.findFirst({
-    orderBy: { sortOrder: "desc" },
-  });
-  await prisma.galleryImage.create({
-    data: {
-      url: safeUrl,
-      alt: alt?.trim() || null,
-      sortOrder: (last?.sortOrder ?? 0) + 1,
-    },
-  });
+  await addGalleryImageRecord(url, alt);
   revalidatePath("/");
   revalidatePath("/gallery");
   revalidatePath("/admin/gallery");
@@ -313,6 +303,7 @@ export async function addGalleryImageFromUpload(
 
 export async function deleteGalleryImage(formData: FormData): Promise<void> {
   await guard();
+  await ensureGalleryTable();
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;
   await prisma.galleryImage.delete({ where: { id } });
@@ -323,6 +314,7 @@ export async function deleteGalleryImage(formData: FormData): Promise<void> {
 
 export async function deleteGalleryImages(formData: FormData): Promise<void> {
   await guard();
+  await ensureGalleryTable();
   const ids = formData
     .getAll("ids")
     .map((v) => String(v).trim())
@@ -336,6 +328,7 @@ export async function deleteGalleryImages(formData: FormData): Promise<void> {
 
 export async function moveGalleryImage(formData: FormData): Promise<void> {
   await guard();
+  await ensureGalleryTable();
   const id = String(formData.get("id") ?? "").trim();
   const direction = String(formData.get("direction") ?? "").trim();
   if (!id || (direction !== "up" && direction !== "down")) return;
