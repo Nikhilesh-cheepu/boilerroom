@@ -13,7 +13,10 @@ const dateFmt = new Intl.DateTimeFormat("en-IN", {
 
 function formatEventDate(iso: string | null): string | null {
   if (!iso) return null;
-  const d = new Date(iso);
+  const ymd = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const d = ymd
+    ? new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]))
+    : new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   return dateFmt.format(d);
 }
@@ -39,7 +42,7 @@ function OfferCard({
 
   return (
     <motion.article
-      initial={reduceMotion ? false : { opacity: 0, y: 20, scale: 0.96 }}
+      initial={false}
       whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{

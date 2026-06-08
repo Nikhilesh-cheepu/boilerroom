@@ -1,14 +1,7 @@
-import dynamic from "next/dynamic";
-import { GallerySectionSkeleton } from "@/components/gallery/GallerySectionSkeleton";
+import { PhotosSection } from "@/components/gallery/PhotosSection";
 import { getSiteContactForHome } from "@/lib/data/home-page";
 import { getGalleryAll } from "@/lib/gallery-data";
 import { buildWhatsAppHref } from "@/lib/whatsapp";
-
-const PhotosSection = dynamic(
-  () =>
-    import("@/components/gallery/PhotosSection").then((m) => m.PhotosSection),
-  { loading: () => <GallerySectionSkeleton />, ssr: false },
-);
 
 export async function GallerySection() {
   const [images, contact] = await Promise.all([

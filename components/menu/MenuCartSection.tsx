@@ -35,10 +35,6 @@ export function MenuCartSection({
   whatsappE164: string;
 }) {
   const reduceMotion = useReducedMotion() ?? false;
-  const kindFrom = () =>
-    reduceMotion
-      ? { opacity: 1, y: 0, scale: 1 }
-      : { opacity: 0, y: 18, scale: 0.94 };
   const { lines, addOne, removeOne, totalQty } = useMenuCart();
   const [panelOpen, setPanelOpen] = useState(false);
   const [activeKind, setActiveKind] = useState<MenuKind>("food");
@@ -78,7 +74,7 @@ export function MenuCartSection({
       <div className="mx-auto max-w-6xl px-4 sm:px-5">
         <motion.header
           className="mb-7 text-left sm:mb-8"
-          initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-12%" }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -100,7 +96,7 @@ export function MenuCartSection({
               key={k.id}
               type="button"
               onClick={() => openWithKind(k.id)}
-              initial={kindFrom()}
+              initial={false}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
               transition={{
