@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { GallerySection } from "@/components/gallery/GallerySection";
+import { GallerySectionSkeleton } from "@/components/gallery/GallerySectionSkeleton";
 import { MenuCartSection } from "@/components/menu/MenuCartSection";
 import { SectionReveal } from "@/components/motion/SectionReveal";
 import { EventsOffersContent } from "@/components/sections/events-offers/EventsOffersContent";
@@ -18,9 +19,9 @@ export async function HomeMainBlock() {
       </SectionReveal>
       <div className="pointer-events-none h-7 w-full bg-[#070b12]" />
 
-      <SectionReveal delay={0.06}>
+      <Suspense fallback={<GallerySectionSkeleton />}>
         <GallerySection />
-      </SectionReveal>
+      </Suspense>
       <div className="pointer-events-none h-7 w-full bg-[#070b12]" />
 
       <SectionReveal delay={0.08}>
